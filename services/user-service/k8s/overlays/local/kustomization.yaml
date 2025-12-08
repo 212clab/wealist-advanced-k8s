@@ -9,7 +9,7 @@ resources:
 images:
   - name: user-service
     newName: user-service
-    newTag: local
+    newTag: v1
 
 replicas:
   - name: user-service

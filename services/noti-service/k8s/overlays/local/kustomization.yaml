@@ -9,7 +9,7 @@ resources:
 images:
   - name: noti-service
     newName: noti-service
-    newTag: local
+    newTag: v1
 
 replicas:
   - name: noti-service

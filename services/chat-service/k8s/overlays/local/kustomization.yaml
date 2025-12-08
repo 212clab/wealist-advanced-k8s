@@ -9,7 +9,7 @@ resources:
 images:
   - name: chat-service
     newName: chat-service
-    newTag: local
+    newTag: v1
 
 replicas:
   - name: chat-service

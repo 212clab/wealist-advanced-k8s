@@ -9,7 +9,7 @@ resources:
 images:
   - name: auth-service
     newName: auth-service
-    newTag: local
+    newTag: v1
 
 replicas:
   - name: auth-service

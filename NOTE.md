@@ -36,9 +36,21 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main
 3. 로컬 배포 테스트
 3-1. 생성될 자원 확인 kubectl kustomize infrastructure/overlays/local
 3-2. 실제 배포 kubectl apply -k infrastructure/overlays/local
-3-3. 확인 kubectl get ns, kubectl get ns
+3-3. 확인 kubectl get ns
 
+
+```
+
+
+# 1209(화) 일지
+```
 4. 이미지를 빌드해서 docker-hub에 이미지를 넣고 그 이미지를 땡겨와서 배포하자(argoCD 대비)
+4-1. docker login
+4-2. # 형식: docker build -t <dockerhub-username>/<이미지명>:<태그> -f <Dockerfile경로> <context경로>
 
+# 예시 - board-service
+docker build -t 212clab/wealist-board-service:v1 -f services/board-service/docker/Dockerfile services/board-service
+
+docker push 212clab/wealist-board-service:v1
 
 ```

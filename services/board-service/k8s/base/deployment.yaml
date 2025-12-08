@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: board-service
-          image: board-service:latest
+          image: board-service:v1
           ports:
             - containerPort: 8082
           envFrom:

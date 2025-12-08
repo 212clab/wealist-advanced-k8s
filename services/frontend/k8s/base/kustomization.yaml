@@ -6,6 +6,6 @@ resources:
   - service.yaml
   - configmap.yaml
 
-commonLabels:
+labels:
   app.kubernetes.io/name: frontend
   app.kubernetes.io/part-of: wealist

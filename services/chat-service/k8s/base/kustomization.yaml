@@ -7,6 +7,6 @@ resources:
   - configmap.yaml
   - secret.yaml
 
-commonLabels:
+labels:
   app.kubernetes.io/name: chat-service
   app.kubernetes.io/part-of: wealist

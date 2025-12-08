@@ -1,0 +1,31 @@
+# 0. 클러스터 자체를 만드는 설정! 빈 k8s 클러스터를 생성한다
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+  # 마스터 노드 - Ingress 트래픽 받을 준비
+  - role: control-plane
+    kubeadmConfigPatches:
+      - |
+        kind: InitConfiguration
+        nodeRegistration:
+          kubeletExtraArgs:
+            node-labels: "ingress-ready=true"
+    # Ingress 컨트롤러가 호스트의 80, 443 포트를 바인딩할 수 있도록 설정
+    # 각 서비스마다 외부 포트를 열지 않고(NodePort)
+    # Ingress가 단일 진입점(80)으로 들어와서 url 경로로 분기함(규칙 설정 문서 + 실제 구현체)
+    # docker compose ~ nginx/ 
+    # kind(local k8s) ~ ingress + nginx ingress controller /
+    # k8s(aws) ~ ingress + alb
+    extraPortMappings:
+      - containerPort: 80
+        hostPort: 80
+        protocol: TCP
+      - containerPort: 443
+        hostPort: 443
+        protocol: TCP
+  # 워커 노드들 - 실제 앱 Pod 실행
+  - role: worker
+  - role: worker
+
+
+# kind create cluster --name wealist --config kind-config.yaml

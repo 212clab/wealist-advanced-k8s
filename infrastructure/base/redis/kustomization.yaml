@@ -6,6 +6,6 @@ resources:
   - service.yaml
   - secret.yaml
 
-commonLabels:
+labels:
   app.kubernetes.io/name: redis
   app.kubernetes.io/part-of: wealist

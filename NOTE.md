@@ -110,3 +110,20 @@ kubectl get pods -n wealist-local
 ```
 
 ```
+kubectl port-forward -n wealist-local svc/frontend 3000:80 &
+kubectl port-forward -n wealist-local svc/auth-service 8080:8080 &
+
+
+
+
+
+
+# 특정 secret 파일만 적용
+kubectl apply -f services/auth-service/k8s/base/secret.yaml -n wealist-local
+
+# 또는 kustomize로 전체 적용
+kubectl apply -k infrastructure/overlays/local/ -n wealist-local
+
+# Secret 변경 후 Pod 재시작 필요 (환경변수로 주입된 경우)
+kubectl rollout restart deployment/auth-service -n wealist-local
+

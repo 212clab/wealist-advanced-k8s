@@ -85,4 +85,8 @@ kubectl apply -k services/frontend/k8s/overlays/local
 kubectl apply -k services/storage-service/k8s/overlays/local
 kubectl apply -k services/video-service/k8s/overlays/local
 
+
+kind delete cluster --name wealist
+
+
 ```

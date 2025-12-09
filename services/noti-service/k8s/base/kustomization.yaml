@@ -8,5 +8,6 @@ resources:
   - secret.yaml
 
 labels:
-  app.kubernetes.io/name: noti-service
-  app.kubernetes.io/part-of: wealist
+  - pairs:
+    app.kubernetes.io/name: noti-service
+    app.kubernetes.io/part-of: wealist

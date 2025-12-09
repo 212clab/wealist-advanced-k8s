@@ -9,5 +9,5 @@ resources:
 
 labels:
   - pairs:
-    app.kubernetes.io/name: auth-service
-    app.kubernetes.io/part-of: wealist
+      app.kubernetes.io/name: auth-service
+      app.kubernetes.io/part-of: wealist

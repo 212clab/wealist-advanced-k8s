@@ -7,8 +7,8 @@ resources:
   - ../../base
 
 images:
-  - name: wealist/storage-service
-    newName: 212clab/wealist-storage-service
+  - name: storage-service
+    newName: localhost:5001/storage-service
     newTag: v1
 
 replicas:

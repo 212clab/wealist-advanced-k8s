@@ -8,7 +8,7 @@ resources:
 
 images:
   - name: noti-service
-    newName: 212clab/wealist-noti-service
+    newName: localhost:5001/noti-service
     newTag: v1
 
 replicas:

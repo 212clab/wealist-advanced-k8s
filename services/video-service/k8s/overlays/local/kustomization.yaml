@@ -7,8 +7,8 @@ resources:
   - ../../base
 
 images:
-  - name: wealist/video-service
-    newName: 212clab/wealist-video-service
+  - name: video-service
+    newName: localhost:5001/video-service
     newTag: v1
 
 replicas:

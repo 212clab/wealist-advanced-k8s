@@ -8,7 +8,7 @@ resources:
 
 images:
   - name: user-service
-    newName: 212clab/wealist-user-service
+    newName: localhost:5001/user-service
     newTag: v1
 
 replicas:

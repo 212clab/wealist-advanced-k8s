@@ -1,55 +1,56 @@
 #!/bin/bash
-# Kind 노드에서 직접 이미지를 pull하는 스크립트
-# Docker Desktop의 손상된 이미지 캐시 문제를 우회
+# 인프라 이미지를 로컬 레지스트리에 푸시하는 스크립트
+# Docker Hub rate limit 완전 우회
 
 set -e
 
-CLUSTER_NAME="wealist"
+REG_PORT="5001"
+LOCAL_REG="localhost:${REG_PORT}"
 
-echo "=== 인프라 이미지 로드 스크립트 (Kind 노드 직접 Pull) ==="
-
-# 필요한 인프라 이미지 목록
-IMAGES=(
-    "docker.io/library/postgres:15-alpine"
-    "docker.io/library/redis:7-alpine"
-    "docker.io/coturn/coturn:4.6"
-    "docker.io/livekit/livekit-server:v1.5"
-)
-
-# Kind 노드 목록
-NODES=(
-    "${CLUSTER_NAME}-control-plane"
-    "${CLUSTER_NAME}-worker"
-    "${CLUSTER_NAME}-worker2"
-)
-
-echo ""
-echo "Kind 노드에서 직접 이미지 Pull"
-echo "노드: ${NODES[*]}"
+echo "=== 인프라 이미지 → 로컬 레지스트리 ==="
+echo "로컬 레지스트리: ${LOCAL_REG}"
 echo ""
 
-for node in "${NODES[@]}"; do
-    echo "=== Node: $node ==="
+# 원본 이미지 → 로컬 레지스트리 태그 매핑
+declare -A IMAGES=(
+    ["postgres:15-alpine"]="${LOCAL_REG}/postgres:15-alpine"
+    ["redis:7-alpine"]="${LOCAL_REG}/redis:7-alpine"
+    ["coturn/coturn:4.6"]="${LOCAL_REG}/coturn:4.6"
+    ["livekit/livekit-server:v1.5"]="${LOCAL_REG}/livekit:v1.5"
+)
 
-    # 노드 존재 확인
-    if ! docker ps --format '{{.Names}}' | grep -q "^${node}$"; then
-        echo "WARNING: Node $node not found, skipping..."
-        continue
-    fi
+# 레지스트리 실행 확인
+if ! curl -s "http://${LOCAL_REG}/v2/" > /dev/null 2>&1; then
+    echo "ERROR: 로컬 레지스트리가 실행 중이 아닙니다!"
+    echo "먼저 ./0.setup-cluster.sh 를 실행하세요."
+    exit 1
+fi
 
-    for img in "${IMAGES[@]}"; do
-        echo "  Pulling: $img"
-        docker exec -it "$node" crictl pull "$img" || {
-            echo "  WARNING: Failed to pull $img on $node"
-        }
-    done
-    echo ""
+echo "Step 1: Docker Hub에서 이미지 Pull"
+for src in "${!IMAGES[@]}"; do
+    echo "  Pulling: $src"
+    docker pull --platform linux/amd64 "$src" || {
+        echo "  WARNING: Failed to pull $src"
+    }
 done
 
+echo ""
+echo "Step 2: 로컬 레지스트리로 Tag & Push"
+for src in "${!IMAGES[@]}"; do
+    dst="${IMAGES[$src]}"
+    echo "  $src → $dst"
+    docker tag "$src" "$dst"
+    docker push "$dst"
+done
+
+echo ""
 echo "=== 완료! ==="
 echo ""
-echo "이미지 확인:"
-echo "  docker exec -it ${CLUSTER_NAME}-control-plane crictl images"
+echo "로컬 레지스트리 이미지 확인:"
+echo "  curl -s http://${LOCAL_REG}/v2/_catalog | jq"
 echo ""
-echo "Pod 재시작:"
-echo "  kubectl delete pods -n wealist-local --all"
+echo "⚠️  중요: infrastructure kustomization에서 이미지 경로 변경 필요!"
+echo "  postgres:15-alpine → ${LOCAL_REG}/postgres:15-alpine"
+echo "  redis:7-alpine → ${LOCAL_REG}/redis:7-alpine"
+echo "  coturn/coturn:4.6 → ${LOCAL_REG}/coturn:4.6"
+echo "  livekit/livekit-server:v1.5 → ${LOCAL_REG}/livekit:v1.5"

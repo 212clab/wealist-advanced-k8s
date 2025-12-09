@@ -1,10 +1,11 @@
 #!/bin/bash
-# 서비스 이미지 빌드 후 Kind 클러스터에 로드하는 스크립트
+# 서비스 이미지 빌드 후 로컬 레지스트리에 푸시하는 스크립트
+# Docker Hub rate limit 및 kind load 문제 완전 우회
 
 set -e
 
-CLUSTER_NAME="wealist"
-REGISTRY="212clab"
+REG_PORT="5001"
+LOCAL_REG="localhost:${REG_PORT}"
 TAG="v1"
 
 # 색상 출력
@@ -13,8 +14,16 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-echo "=== 서비스 이미지 빌드 & Kind 로드 스크립트 ==="
+echo "=== 서비스 이미지 빌드 & 로컬 레지스트리 푸시 ==="
+echo "로컬 레지스트리: ${LOCAL_REG}"
 echo ""
+
+# 레지스트리 실행 확인
+if ! curl -s "http://${LOCAL_REG}/v2/" > /dev/null 2>&1; then
+    echo -e "${RED}ERROR: 로컬 레지스트리가 실행 중이 아닙니다!${NC}"
+    echo "먼저 ./0.setup-cluster.sh 를 실행하세요."
+    exit 1
+fi
 
 # 서비스별 Dockerfile 위치 매핑
 declare -A SERVICES=(
@@ -54,11 +63,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 cd "$PROJECT_ROOT"
 echo "Working directory: $PROJECT_ROOT"
+echo ""
 
 for service in "${BUILD_SERVICES[@]}"; do
     SERVICE_PATH="${SERVICES[$service]}"
     DOCKERFILE="${DOCKERFILES[$service]}"
-    IMAGE_NAME="${REGISTRY}/wealist-${service}:${TAG}"
+    IMAGE_NAME="${LOCAL_REG}/${service}:${TAG}"
 
     if [ -z "$SERVICE_PATH" ]; then
         echo -e "${RED}[ERROR] Unknown service: $service${NC}"
@@ -78,12 +88,12 @@ for service in "${BUILD_SERVICES[@]}"; do
         continue
     fi
 
-    # Kind에 로드
-    echo "  Loading to Kind cluster..."
-    if kind load docker-image "$IMAGE_NAME" --name "$CLUSTER_NAME"; then
-        echo -e "${GREEN}[SUCCESS] Loaded $IMAGE_NAME to Kind${NC}"
+    # 로컬 레지스트리에 푸시
+    echo "  Pushing to local registry..."
+    if docker push "$IMAGE_NAME"; then
+        echo -e "${GREEN}[SUCCESS] Pushed $IMAGE_NAME${NC}"
     else
-        echo -e "${RED}[FAILED] Failed to load $service to Kind${NC}"
+        echo -e "${RED}[FAILED] Failed to push $service${NC}"
     fi
 
     echo ""
@@ -91,8 +101,9 @@ done
 
 echo "=== 완료! ==="
 echo ""
-echo "배포 명령어:"
-echo "  kubectl apply -k services/<service-name>/k8s/overlays/local"
+echo "로컬 레지스트리 이미지 확인:"
+echo "  curl -s http://${LOCAL_REG}/v2/_catalog | jq"
 echo ""
-echo "또는 전체 재시작:"
-echo "  kubectl rollout restart deployment -n wealist-local"
+echo "배포 명령어:"
+echo "  kubectl apply -k infrastructure/overlays/local"
+echo "  kubectl apply -k services/<service-name>/k8s/overlays/local"

@@ -89,4 +89,8 @@ kubectl apply -k services/video-service/k8s/overlays/local
 kind delete cluster --name wealist
 
 
+ # postgres에서 DB 목록 확인
+kubectl exec -it postgres-0 -n wealist-local -- psql -U postgres -c "\l"
+
 ```
+

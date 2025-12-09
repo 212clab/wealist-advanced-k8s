@@ -1,6 +1,7 @@
 #!/bin/bash
 # 서비스 이미지 빌드 후 로컬 레지스트리에 푸시하는 스크립트
 # Docker Hub rate limit 및 kind load 문제 완전 우회
+# macOS bash 3.x 호환
 
 set -e
 
@@ -25,39 +26,6 @@ if ! curl -s "http://${LOCAL_REG}/v2/" > /dev/null 2>&1; then
     exit 1
 fi
 
-# 서비스별 Dockerfile 위치 매핑
-declare -A SERVICES=(
-    ["auth-service"]="services/auth-service"
-    ["board-service"]="services/board-service"
-    ["chat-service"]="services/chat-service"
-    ["frontend"]="services/frontend"
-    ["noti-service"]="services/noti-service"
-    ["storage-service"]="services/storage-service"
-    ["user-service"]="services/user-service"
-    ["video-service"]="services/video-service"
-)
-
-declare -A DOCKERFILES=(
-    ["auth-service"]="Dockerfile"
-    ["board-service"]="docker/Dockerfile"
-    ["chat-service"]="docker/Dockerfile"
-    ["frontend"]="Dockerfile"
-    ["noti-service"]="docker/Dockerfile"
-    ["storage-service"]="docker/Dockerfile"
-    ["user-service"]="docker/Dockerfile"
-    ["video-service"]="docker/Dockerfile"
-)
-
-# 빌드할 서비스 선택 (인자가 없으면 전체 빌드)
-if [ $# -eq 0 ]; then
-    BUILD_SERVICES=("auth-service" "board-service" "chat-service" "frontend" "noti-service" "storage-service" "user-service" "video-service")
-else
-    BUILD_SERVICES=("$@")
-fi
-
-echo "빌드 대상: ${BUILD_SERVICES[*]}"
-echo ""
-
 # 프로젝트 루트로 이동 (스크립트는 docker/scripts/local/ 에 위치)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
@@ -65,26 +33,53 @@ cd "$PROJECT_ROOT"
 echo "Working directory: $PROJECT_ROOT"
 echo ""
 
-for service in "${BUILD_SERVICES[@]}"; do
-    SERVICE_PATH="${SERVICES[$service]}"
-    DOCKERFILE="${DOCKERFILES[$service]}"
-    IMAGE_NAME="${LOCAL_REG}/${service}:${TAG}"
+# 서비스 정보 (name|path|dockerfile)
+ALL_SERVICES="auth-service|services/auth-service|Dockerfile
+board-service|services/board-service|docker/Dockerfile
+chat-service|services/chat-service|docker/Dockerfile
+frontend|services/frontend|Dockerfile
+noti-service|services/noti-service|docker/Dockerfile
+storage-service|services/storage-service|docker/Dockerfile
+user-service|services/user-service|docker/Dockerfile
+video-service|services/video-service|docker/Dockerfile"
 
-    if [ -z "$SERVICE_PATH" ]; then
-        echo -e "${RED}[ERROR] Unknown service: $service${NC}"
-        continue
-    fi
+# 빌드할 서비스 선택
+if [ $# -eq 0 ]; then
+    BUILD_SERVICES="$ALL_SERVICES"
+else
+    BUILD_SERVICES=""
+    for arg in "$@"; do
+        line=$(echo "$ALL_SERVICES" | grep "^${arg}|" || true)
+        if [ -n "$line" ]; then
+            BUILD_SERVICES="${BUILD_SERVICES}${line}"$'\n'
+        else
+            echo -e "${RED}[ERROR] Unknown service: $arg${NC}"
+        fi
+    done
+fi
 
-    echo -e "${YELLOW}[BUILD] $service${NC}"
-    echo "  Path: $SERVICE_PATH"
-    echo "  Dockerfile: $DOCKERFILE"
+echo "빌드 대상:"
+echo "$BUILD_SERVICES" | while IFS='|' read -r name path dockerfile; do
+    [ -n "$name" ] && echo "  - $name"
+done
+echo ""
+
+# 빌드 및 푸시
+echo "$BUILD_SERVICES" | while IFS='|' read -r name path dockerfile; do
+    [ -z "$name" ] && continue
+
+    IMAGE_NAME="${LOCAL_REG}/${name}:${TAG}"
+
+    echo -e "${YELLOW}[BUILD] $name${NC}"
+    echo "  Path: $path"
+    echo "  Dockerfile: $dockerfile"
     echo "  Image: $IMAGE_NAME"
 
     # 빌드
-    if docker build -t "$IMAGE_NAME" -f "$SERVICE_PATH/$DOCKERFILE" "$SERVICE_PATH"; then
+    if docker build -t "$IMAGE_NAME" -f "$path/$dockerfile" "$path"; then
         echo -e "${GREEN}[SUCCESS] Built $IMAGE_NAME${NC}"
     else
-        echo -e "${RED}[FAILED] Failed to build $service${NC}"
+        echo -e "${RED}[FAILED] Failed to build $name${NC}"
         continue
     fi
 
@@ -93,7 +88,7 @@ for service in "${BUILD_SERVICES[@]}"; do
     if docker push "$IMAGE_NAME"; then
         echo -e "${GREEN}[SUCCESS] Pushed $IMAGE_NAME${NC}"
     else
-        echo -e "${RED}[FAILED] Failed to push $service${NC}"
+        echo -e "${RED}[FAILED] Failed to push $name${NC}"
     fi
 
     echo ""
@@ -102,7 +97,7 @@ done
 echo "=== 완료! ==="
 echo ""
 echo "로컬 레지스트리 이미지 확인:"
-echo "  curl -s http://${LOCAL_REG}/v2/_catalog | jq"
+echo "  curl -s http://${LOCAL_REG}/v2/_catalog"
 echo ""
 echo "배포 명령어:"
 echo "  kubectl apply -k infrastructure/overlays/local"

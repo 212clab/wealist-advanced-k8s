@@ -121,7 +121,6 @@ export const VideoRoom: React.FC<VideoRoomProps> = ({
   onLeave,
   userProfile,
 }) => {
-  const { theme } = useTheme();
   const [connectionState, setConnectionState] = useState<ConnectionState>('connecting');
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [isMuted, setIsMuted] = useState(false);
@@ -131,7 +130,7 @@ export const VideoRoom: React.FC<VideoRoomProps> = ({
   const [isBlurEnabled, setIsBlurEnabled] = useState(false); // 배경 흐림 효과
   const [showParticipants, setShowParticipants] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, _setError] = useState<string | null>(null);
 
   // Chat state
   const [showChat, setShowChat] = useState(false);

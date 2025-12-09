@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { useTheme } from '../contexts/ThemeContext';
 import MainLayout from '../components/layout/MainLayout';
 import { StorageSidebar } from '../components/storage/StorageSidebar';
 import { StorageHeader } from '../components/storage/StorageHeader';

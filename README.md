@@ -318,7 +318,7 @@ make build-all
 make k8s-apply-local
 
 # 3. 상태 확인
-kubectl get pods -n wealist-dev
+kubectl get pods -n wealist-local
 
 # 4. 삭제
 make k8s-delete-local

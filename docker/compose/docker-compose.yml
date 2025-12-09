@@ -557,9 +557,9 @@ services:
     container_name: wealist-livekit
     hostname: livekit
     ports:
-      - "7880:7880"     # HTTP API & WebSocket
-      - "7881:7881"     # TCP for WebRTC
-      - "50000-50020:50000-50020/udp"  # UDP for WebRTC media (limited range for dev)
+      - "7880:7880" # HTTP API & WebSocket
+      - "7881:7881" # TCP for WebRTC
+      - "50000-50020:50000-50020/udp" # UDP for WebRTC media (limited range for dev)
 
     command: --config /etc/livekit.yaml
 
@@ -584,10 +584,10 @@ services:
     container_name: wealist-coturn
     hostname: coturn
     ports:
-      - "3478:3478"         # STUN/TURN UDP
-      - "3478:3478/udp"     # STUN/TURN UDP
-      - "5349:5349"         # STUN/TURN TLS
-      - "5349:5349/udp"     # STUN/TURN TLS UDP
+      - "3478:3478" # STUN/TURN UDP
+      - "3478:3478/udp" # STUN/TURN UDP
+      - "5349:5349" # STUN/TURN TLS
+      - "5349:5349/udp" # STUN/TURN TLS UDP
 
     volumes:
       - ../coturn/turnserver.conf:/etc/coturn/turnserver.conf:ro
@@ -682,7 +682,8 @@ services:
       - video-service
 
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://localhost:80/health || exit 1"]
+      test:
+        ["CMD-SHELL", "wget -q --spider http://localhost:80/health || exit 1"]
       interval: 10s
       timeout: 3s
       retries: 3
@@ -855,7 +856,7 @@ services:
     environment:
       - MINIO_ROOT_USER=${MINIO_ROOT_USER:-minioadmin}
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-minioadmin}
-      - S3_BUCKET=${S3_BUCKET:-wealist-dev-files}
+      - S3_BUCKET=${S3_BUCKET:-wealist-local-files}
 
     entrypoint: >
       /bin/sh -c "
@@ -903,12 +904,12 @@ services:
       - prometheus-data:/prometheus
 
     command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--storage.tsdb.retention.time=7d'
-      - '--web.console.libraries=/etc/prometheus/console_libraries'
-      - '--web.console.templates=/etc/prometheus/consoles'
-      - '--web.enable-lifecycle'
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=7d"
+      - "--web.console.libraries=/etc/prometheus/console_libraries"
+      - "--web.console.templates=/etc/prometheus/consoles"
+      - "--web.enable-lifecycle"
 
     networks:
       - monitoring-net

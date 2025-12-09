@@ -1,7 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: wealist-dev
+namespace: wealist-local
 
 resources:
   - ../../base
@@ -9,7 +9,7 @@ resources:
 images:
   - name: storage-service
     newName: storage-service
-    newTag: local
+    newTag: v1
 
 replicas:
   - name: storage-service

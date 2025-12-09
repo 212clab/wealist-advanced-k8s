@@ -11,7 +11,7 @@ spec:
     path: services/noti-service/k8s/overlays/local
   destination:
     server: https://kubernetes.default.svc
-    namespace: wealist-dev
+    namespace: wealist-local
   syncPolicy:
     automated:
       prune: true

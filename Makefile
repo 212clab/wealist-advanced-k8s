@@ -165,5 +165,5 @@ status:
 	@echo "=== Docker Containers ==="
 	docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 	@echo ""
-	@echo "=== Kubernetes Pods (wealist-dev) ==="
-	kubectl get pods -n wealist-dev 2>/dev/null || echo "Namespace not found"
+	@echo "=== Kubernetes Pods (wealist-local) ==="
+	kubectl get pods -n wealist-local 2>/dev/null || echo "Namespace not found"

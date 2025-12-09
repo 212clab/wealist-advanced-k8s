@@ -33,7 +33,7 @@ services:
       - NOTI_SERVICE_URL=http://host.docker.internal:8084
       - INTERNAL_API_KEY=internal-secret-key
       # S3/MinIO
-      - S3_BUCKET=wealist-dev-files
+      - S3_BUCKET=wealist-local-files
       - S3_REGION=ap-northeast-2
       - S3_ENDPOINT=http://host.docker.internal:9000
       - S3_PUBLIC_ENDPOINT=http://localhost:9000
@@ -42,7 +42,16 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "-O", "/dev/null", "http://localhost:8000/health"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "-O",
+          "/dev/null",
+          "http://localhost:8000/health",
+        ]
       interval: 30s
       timeout: 3s
       retries: 3

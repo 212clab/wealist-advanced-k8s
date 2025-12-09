@@ -8,8 +8,8 @@ resources:
 
 images:
   - name: frontend
-    newName: frontend
-    newTag: local
+    newName: 212clab/wealist-frontend
+    newTag: v1
 
 replicas:
   - name: frontend

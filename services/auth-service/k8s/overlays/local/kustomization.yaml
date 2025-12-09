@@ -8,7 +8,7 @@ resources:
 
 images:
   - name: auth-service
-    newName: auth-service
+    newName: 212clab/wealist-auth-service
     newTag: v1
 
 replicas:

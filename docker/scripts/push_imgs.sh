@@ -28,6 +28,7 @@ docker build -t 212clab/wealist-noti-service:v1 -f services/noti-service/docker/
 echo "📤 Pushing noti-service..."
 docker push 212clab/wealist-noti-service:v1
 
-# frontend
-# docker build -t 212clab/wealist-frontend:v1 -f services/frontend/Dockerfile services/frontend
-# docker push 212clab/wealist-frontend:v1
+echo "🔨 [6/6] Building frontend..."
+docker build -t 212clab/wealist-frontend:v1 -f services/frontend/Dockerfile services/frontend
+echo "📤 Pushing frontend..."
+docker push 212clab/wealist-frontend:v1

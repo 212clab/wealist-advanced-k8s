@@ -6,4 +6,5 @@ resources:
   - redis
 
 labels:
-  app.kubernetes.io/part-of: wealist-infrastructure
+  - pairs:
+      app.kubernetes.io/part-of: wealist-infrastructure

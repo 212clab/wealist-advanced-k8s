@@ -7,5 +7,6 @@ resources:
   - secret.yaml
 
 labels:
-  app.kubernetes.io/name: redis
-  app.kubernetes.io/part-of: wealist
+  - pairs:
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/part-of: wealist

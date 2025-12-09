@@ -8,5 +8,5 @@ resources:
 
 labels:
   - pairs:
-    app.kubernetes.io/name: redis
-    app.kubernetes.io/part-of: wealist
+      app.kubernetes.io/name: redis
+      app.kubernetes.io/part-of: wealist

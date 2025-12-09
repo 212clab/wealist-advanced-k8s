@@ -4,6 +4,8 @@ kind: Kustomization
 resources:
   - postgres
   - redis
+  - coturn
+  - livekit
 
 labels:
   - pairs:

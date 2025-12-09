@@ -57,3 +57,32 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main
     kubectl get all -n wealist-local
 
 ```
+
+# 첨부터 한다면
+```
+Step 1. Kind 클러스터 생성
+kind create cluster --name wealist --config kind-config.yaml
+
+Step 2. Ingress Nginx Controller 설치
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
+
+# 설치 확인 (Running 될 때까지)
+kubectl get pods -n ingress-nginx
+
+Step 3. Infrastructure 배포
+kubectl apply -k infrastructure/overlays/local
+
+# postgres, redis Running 확인
+kubectl get pods -n wealist-local
+
+Step 4. 서비스들 배포
+kubectl apply -k services/auth-service/k8s/overlays/local
+kubectl apply -k services/user-service/k8s/overlays/local
+kubectl apply -k services/board-service/k8s/overlays/local
+kubectl apply -k services/chat-service/k8s/overlays/local
+kubectl apply -k services/noti-service/k8s/overlays/local
+kubectl apply -k services/frontend/k8s/overlays/local
+kubectl apply -k services/storage-service/k8s/overlays/local
+kubectl apply -k services/video-service/k8s/overlays/local
+
+```

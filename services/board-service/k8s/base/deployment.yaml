@@ -26,13 +26,13 @@ spec:
                 name: board-service-secret
           livenessProbe:
             httpGet:
-              path: /health
+              path: /health/live
               port: 8000
             initialDelaySeconds: 10
             periodSeconds: 10
           readinessProbe:
             httpGet:
-              path: /ready
+              path: /health/ready
               port: 8000
             initialDelaySeconds: 5
             periodSeconds: 5

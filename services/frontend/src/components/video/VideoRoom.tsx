@@ -20,7 +20,6 @@ import {
   FlipHorizontal,
   Sparkles,
 } from 'lucide-react';
-import { useTheme } from '../../contexts/ThemeContext';
 import { VideoRoom as VideoRoomType, videoService } from '../../api/videoService';
 
 // Display mode types

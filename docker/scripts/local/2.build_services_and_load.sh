@@ -49,9 +49,11 @@ fi
 echo "빌드 대상: ${BUILD_SERVICES[*]}"
 echo ""
 
-# 스크립트가 실행되는 위치 확인
+# 프로젝트 루트로 이동 (스크립트는 docker/scripts/local/ 에 위치)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+cd "$PROJECT_ROOT"
+echo "Working directory: $PROJECT_ROOT"
 
 for service in "${BUILD_SERVICES[@]}"; do
     SERVICE_PATH="${SERVICES[$service]}"

@@ -1,53 +1,55 @@
 #!/bin/bash
-# Docker Hub rate limiting 우회를 위해 이미지를 로컬에서 pull하고 Kind에 로드
-# 손상된 이미지 캐시 문제 해결을 위해 기존 이미지 삭제 후 재다운로드
+# Kind 노드에서 직접 이미지를 pull하는 스크립트
+# Docker Desktop의 손상된 이미지 캐시 문제를 우회
 
 set -e
 
 CLUSTER_NAME="wealist"
 
-echo "=== 인프라 이미지 로드 스크립트 ==="
+echo "=== 인프라 이미지 로드 스크립트 (Kind 노드 직접 Pull) ==="
 
 # 필요한 인프라 이미지 목록
 IMAGES=(
-    "postgres:15-alpine"
-    "redis:7-alpine"
-    "coturn/coturn:4.6"
-    "livekit/livekit-server:v1.5"
+    "docker.io/library/postgres:15-alpine"
+    "docker.io/library/redis:7-alpine"
+    "docker.io/coturn/coturn:4.6"
+    "docker.io/livekit/livekit-server:v1.5"
+)
+
+# Kind 노드 목록
+NODES=(
+    "${CLUSTER_NAME}-control-plane"
+    "${CLUSTER_NAME}-worker"
+    "${CLUSTER_NAME}-worker2"
 )
 
 echo ""
-echo "Step 1: 기존 이미지 삭제 (손상된 캐시 정리)"
-for img in "${IMAGES[@]}"; do
-    echo "Removing: $img"
-    docker rmi "$img" 2>/dev/null || true
-done
-
+echo "Kind 노드에서 직접 이미지 Pull"
+echo "노드: ${NODES[*]}"
 echo ""
-echo "Step 2: Docker 이미지 Pull (linux/amd64)"
-for img in "${IMAGES[@]}"; do
-    echo "Pulling: $img"
-    docker pull --platform linux/amd64 "$img" || {
-        echo "WARNING: Failed to pull $img, retrying..."
-        sleep 5
-        docker pull --platform linux/amd64 "$img"
-    }
-done
 
-echo ""
-echo "Step 3: Kind 클러스터에 이미지 로드"
-for img in "${IMAGES[@]}"; do
-    echo "Loading: $img"
-    kind load docker-image "$img" --name "$CLUSTER_NAME" || {
-        echo "ERROR: Failed to load $img"
-        echo "Trying alternative method: docker save | docker exec"
-        docker save "$img" | docker exec -i "${CLUSTER_NAME}-control-plane" ctr --namespace=k8s.io images import - || {
-            echo "WARNING: Alternative method also failed for $img"
+for node in "${NODES[@]}"; do
+    echo "=== Node: $node ==="
+
+    # 노드 존재 확인
+    if ! docker ps --format '{{.Names}}' | grep -q "^${node}$"; then
+        echo "WARNING: Node $node not found, skipping..."
+        continue
+    fi
+
+    for img in "${IMAGES[@]}"; do
+        echo "  Pulling: $img"
+        docker exec -it "$node" crictl pull "$img" || {
+            echo "  WARNING: Failed to pull $img on $node"
         }
-    }
+    done
+    echo ""
 done
 
-echo ""
 echo "=== 완료! ==="
-echo "이제 pod를 재시작하세요:"
+echo ""
+echo "이미지 확인:"
+echo "  docker exec -it ${CLUSTER_NAME}-control-plane crictl images"
+echo ""
+echo "Pod 재시작:"
 echo "  kubectl delete pods -n wealist-local --all"

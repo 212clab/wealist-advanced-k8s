@@ -3,12 +3,11 @@ kind: ConfigMap
 metadata:
   name: noti-service-config
 data:
-  SPRING_PROFILES_ACTIVE: "default"
+  ENV: "production"
   SERVER_PORT: "8084"
-  # Database
-  SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/noti_db"
-  # Redis
-  SPRING_DATA_REDIS_HOST: "redis"
-  SPRING_DATA_REDIS_PORT: "6379"
+  PORT: "8084"
+  # Redis (Go app uses REDIS_HOST, REDIS_PORT)
+  REDIS_HOST: "redis"
+  REDIS_PORT: "6379"
   # Service URLs
-  USER_SERVICE_URL: "http://user-service:8080"
+  AUTH_SERVICE_URL: "http://auth-service:8081"

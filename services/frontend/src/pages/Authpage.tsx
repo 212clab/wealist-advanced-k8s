@@ -1,40 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
+import { getGoogleAuthUrl } from '../api/apiConfig';
 
-// Runtime config type declaration (injected via config.js)
-declare global {
-  interface Window {
-    __ENV__?: {
-      API_BASE_URL?: string;
-    };
-  }
-}
-
-// K8s ingress 모드 감지: 명시적으로 빈 문자열이 설정된 경우
-const isIngressMode = window.__ENV__?.API_BASE_URL === '';
-
-// OAuth2 Base URL 결정
-const getOAuthBaseUrl = (): string => {
-  // 1. K8s ingress 모드: 상대 경로 사용 (같은 도메인)
-  if (isIngressMode) {
-    return '';
-  }
-
-  // 2. 환경 변수 확인
-  const BASE_DOMAIN = import.meta.env.VITE_API_BASE_URL || 'https://api.wealist.co.kr';
-
-  // 3. 로컬 개발 환경(localhost)일 경우 8080 포트 사용
-  if (BASE_DOMAIN === 'http://localhost' || BASE_DOMAIN.includes('127.0.0.1')) {
-    return `${BASE_DOMAIN}:8080`;
-  }
-
-  // 4. 배포 환경
-  return BASE_DOMAIN + '/api/users';
-};
-
-// ⚠️ 백엔드 OAuth2 인증 시작 엔드포인트
-const GOOGLE_AUTH_URL = `${getOAuthBaseUrl()}/oauth2/authorization/google`;
+// ⚠️ 백엔드 OAuth2 인증 시작 엔드포인트 (apiConfig에서 중앙 관리)
+const GOOGLE_AUTH_URL = getGoogleAuthUrl();
 console.log('GOOGLE_AUTH_URL:', GOOGLE_AUTH_URL);
 const AuthPage: React.FC = () => {
   const { theme } = useTheme();

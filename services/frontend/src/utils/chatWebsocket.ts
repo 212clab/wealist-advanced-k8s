@@ -1,5 +1,7 @@
 // src/utils/chatWebSocket.ts
 
+import { getChatWebSocketUrl } from '../api/apiConfig';
+
 let ws: WebSocket | null = null;
 let pingInterval: number | null = null;
 let isConnecting = false;
@@ -15,44 +17,6 @@ export const WS_CHAT_MTH = [
 ] as const;
 
 export type WSChatMethod = (typeof WS_CHAT_MTH)[number];
-
-const getWebSocketUrl = (chatId: string, token: string): string => {
-  // K8s ingress 모드 감지: window.__ENV__.API_BASE_URL === ""
-  const isIngressMode = window.__ENV__?.API_BASE_URL === "";
-
-  if (isIngressMode) {
-    // K8s ingress: /svc/chat prefix 사용
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    return `${protocol}//${window.location.host}/svc/chat/api/chats/ws/${chatId}?token=${encodeURIComponent(token)}`;
-  }
-
-  const INJECTED_API_BASE_URL = window.__ENV__?.API_BASE_URL || import.meta.env.VITE_API_BASE_URL;
-
-  if (INJECTED_API_BASE_URL) {
-    const isLocalDevelopment = INJECTED_API_BASE_URL.includes('localhost');
-
-    if (isLocalDevelopment) {
-      // Docker-compose: Chat Service 직접 연결
-      return `ws://localhost:8001/api/chats/ws/${chatId}?token=${encodeURIComponent(token)}`;
-    }
-
-    // 운영: ALB를 통한 라우팅
-    const protocol = INJECTED_API_BASE_URL.startsWith('https') ? 'wss:' : 'ws:';
-    const host = INJECTED_API_BASE_URL.replace(/^https?:\/\//, '');
-
-    // 🔥 /api/chats/ws/:chatId
-    return `${protocol}//${host}/api/chats/ws/${chatId}?token=${encodeURIComponent(token)}`;
-  }
-
-  // Fallback
-  const host = window.location.host;
-
-  if (host.includes('localhost') || host.includes('127.0.0.1')) {
-    return `ws://localhost:8001/api/chats/ws/${chatId}?token=${encodeURIComponent(token)}`;
-  }
-
-  return `wss://api.wealist.co.kr/api/chats/ws/${chatId}?token=${encodeURIComponent(token)}`;
-};
 
 export const connectChatWebSocket = (chatId: string, onMessage: (data: any) => void) => {
   // 🔥 같은 chatId에 이미 연결되어 있으면 무시
@@ -110,7 +74,7 @@ export const connectChatWebSocket = (chatId: string, onMessage: (data: any) => v
       return;
     }
 
-    const wsUrl = getWebSocketUrl(chatId, token);
+    const wsUrl = getChatWebSocketUrl(chatId, token);
     console.log('🔌 [Chat WS] 연결 시도:', wsUrl);
 
     isConnecting = true;

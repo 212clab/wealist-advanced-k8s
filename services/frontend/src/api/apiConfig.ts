@@ -317,3 +317,180 @@ export const getAuthHeaders = (token: string) => ({
   Authorization: `Bearer ${token}`,
   Accept: 'application/json',
 });
+
+// ============================================================================
+// WebSocket / SSE URL 생성 헬퍼 (중앙 집중 관리)
+// ============================================================================
+
+/**
+ * 환경 감지 헬퍼 (export for external use)
+ */
+export const getIsIngressMode = (): boolean => isIngressMode;
+export const getIsLocalDevelopment = (): boolean => {
+  return INJECTED_API_BASE_URL?.includes('localhost') ?? false;
+};
+
+/**
+ * WebSocket 프로토콜 결정
+ */
+const getWebSocketProtocol = (baseUrl?: string): 'wss:' | 'ws:' => {
+  if (baseUrl?.startsWith('https')) return 'wss:';
+  if (window.location.protocol === 'https:') return 'wss:';
+  return 'ws:';
+};
+
+/**
+ * Chat WebSocket URL 생성
+ * @param chatId - 채팅방 ID
+ * @param token - 액세스 토큰
+ */
+export const getChatWebSocketUrl = (chatId: string, token: string): string => {
+  const encodedToken = encodeURIComponent(token);
+
+  // K8s ingress 모드
+  if (isIngressMode) {
+    const protocol = getWebSocketProtocol();
+    return `${protocol}//${window.location.host}/svc/chat/api/chats/ws/${chatId}?token=${encodedToken}`;
+  }
+
+  // Docker-compose (로컬 개발) - nginx를 통해 WebSocket 프록시
+  if (INJECTED_API_BASE_URL?.includes('localhost')) {
+    return `ws://localhost/api/chats/ws/${chatId}?token=${encodedToken}`;
+  }
+
+  // 운영 환경 (ALB 라우팅)
+  if (INJECTED_API_BASE_URL) {
+    const protocol = getWebSocketProtocol(INJECTED_API_BASE_URL);
+    const host = INJECTED_API_BASE_URL.replace(/^https?:\/\//, '');
+    return `${protocol}//${host}/api/chats/ws/${chatId}?token=${encodedToken}`;
+  }
+
+  // Fallback
+  const host = window.location.host;
+  if (host.includes('localhost') || host.includes('127.0.0.1')) {
+    return `ws://localhost/api/chats/ws/${chatId}?token=${encodedToken}`;
+  }
+
+  return `wss://api.wealist.co.kr/api/chats/ws/${chatId}?token=${encodedToken}`;
+};
+
+/**
+ * Presence WebSocket URL 생성 (온라인 상태)
+ * @param token - 액세스 토큰
+ */
+export const getPresenceWebSocketUrl = (token: string): string => {
+  const encodedToken = encodeURIComponent(token);
+
+  // K8s ingress 모드
+  if (isIngressMode) {
+    const protocol = getWebSocketProtocol();
+    return `${protocol}//${window.location.host}/svc/chat/api/chats/ws/presence?token=${encodedToken}`;
+  }
+
+  // Docker-compose (로컬 개발) - nginx를 통해 WebSocket 프록시
+  if (INJECTED_API_BASE_URL?.includes('localhost')) {
+    return `ws://localhost/api/chats/ws/presence?token=${encodedToken}`;
+  }
+
+  // 운영 환경 (ALB 라우팅)
+  if (INJECTED_API_BASE_URL) {
+    const protocol = getWebSocketProtocol(INJECTED_API_BASE_URL);
+    const host = INJECTED_API_BASE_URL.replace(/^https?:\/\//, '');
+    return `${protocol}//${host}/api/chats/ws/presence?token=${encodedToken}`;
+  }
+
+  // Fallback
+  const host = window.location.host;
+  if (host.includes('localhost') || host.includes('127.0.0.1')) {
+    return `ws://localhost/api/chats/ws/presence?token=${encodedToken}`;
+  }
+
+  return `wss://api.wealist.co.kr/api/chats/ws/presence?token=${encodedToken}`;
+};
+
+/**
+ * Board WebSocket URL 생성
+ * @param projectId - 프로젝트 ID
+ * @param token - 액세스 토큰
+ */
+export const getBoardWebSocketUrl = (projectId: string, token: string): string => {
+  const encodedToken = encodeURIComponent(token);
+
+  // K8s ingress 모드
+  if (isIngressMode) {
+    const protocol = getWebSocketProtocol();
+    return `${protocol}//${window.location.host}/svc/board/api/boards/ws/project/${projectId}?token=${encodedToken}`;
+  }
+
+  // Docker-compose (로컬 개발) - nginx를 통해 WebSocket 프록시
+  if (INJECTED_API_BASE_URL?.includes('localhost')) {
+    return `ws://localhost/api/boards/ws/project/${projectId}?token=${encodedToken}`;
+  }
+
+  // 운영 환경 (ALB 라우팅)
+  if (INJECTED_API_BASE_URL) {
+    const protocol = getWebSocketProtocol(INJECTED_API_BASE_URL);
+    const host = INJECTED_API_BASE_URL.replace(/^https?:\/\//, '');
+    return `${protocol}//${host}/api/boards/ws/project/${projectId}?token=${encodedToken}`;
+  }
+
+  // Fallback
+  const host = window.location.host;
+  if (host.includes('localhost') || host.includes('127.0.0.1')) {
+    return `ws://localhost/api/boards/ws/project/${projectId}?token=${encodedToken}`;
+  }
+
+  return `wss://api.wealist.co.kr/api/boards/ws/project/${projectId}?token=${encodedToken}`;
+};
+
+/**
+ * Notification SSE Stream URL 생성
+ * @param token - 액세스 토큰 (optional, 없으면 localStorage에서 가져옴)
+ */
+export const getNotificationSSEUrl = (token?: string): string => {
+  const accessToken = token || localStorage.getItem('accessToken') || '';
+  const encodedToken = encodeURIComponent(accessToken);
+
+  // K8s ingress 모드
+  if (isIngressMode) {
+    return `${window.location.origin}/svc/noti/api/notifications/stream?token=${encodedToken}`;
+  }
+
+  // Docker-compose (로컬 개발) - nginx를 통해 SSE 프록시
+  if (INJECTED_API_BASE_URL?.includes('localhost')) {
+    return `http://localhost/api/notifications/stream?token=${encodedToken}`;
+  }
+
+  // 운영 환경 또는 Fallback
+  return `${NOTI_SERVICE_API_URL}/api/notifications/stream?token=${encodedToken}`;
+};
+
+/**
+ * OAuth2 Base URL 생성 (Google 로그인 등)
+ */
+export const getOAuthBaseUrl = (): string => {
+  // K8s ingress 모드: 상대 경로 사용 (같은 도메인)
+  if (isIngressMode) {
+    return '';
+  }
+
+  // Docker-compose (로컬 개발): auth-service 8080 포트
+  if (INJECTED_API_BASE_URL?.includes('localhost')) {
+    return `${INJECTED_API_BASE_URL}:8080`;
+  }
+
+  // 운영 환경
+  if (INJECTED_API_BASE_URL) {
+    return `${INJECTED_API_BASE_URL}/api/users`;
+  }
+
+  // Fallback
+  return 'https://api.wealist.co.kr/api/users';
+};
+
+/**
+ * Google OAuth2 인증 URL
+ */
+export const getGoogleAuthUrl = (): string => {
+  return `${getOAuthBaseUrl()}/oauth2/authorization/google`;
+};

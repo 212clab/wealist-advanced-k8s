@@ -1,4 +1,7 @@
 // utils/websocket.ts
+
+import { getBoardWebSocketUrl } from '../api/apiConfig';
+
 let ws: WebSocket | null = null;
 let pingInterval: number | null = null;
 let isConnecting = false; // 🔥 연결 중 플래그 추가
@@ -11,48 +14,6 @@ export const WS_BOARD_MTH = [
 ] as const;
 
 export type WSBoardMethod = (typeof WS_BOARD_MTH)[number];
-
-const getWebSocketUrl = (projectId: string, token: string): string => {
-  // K8s ingress 모드 감지: window.__ENV__.API_BASE_URL === ""
-  const isIngressMode = window.__ENV__?.API_BASE_URL === "";
-
-  if (isIngressMode) {
-    // K8s ingress: /svc/board prefix 사용
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    return `${protocol}//${window.location.host}/svc/board/api/boards/ws/project/${projectId}?token=${encodeURIComponent(token)}`;
-  }
-
-  const INJECTED_API_BASE_URL = window.__ENV__?.API_BASE_URL || import.meta.env.VITE_API_BASE_URL;
-
-  if (INJECTED_API_BASE_URL) {
-    const isLocalDevelopment = INJECTED_API_BASE_URL.includes('localhost');
-
-    if (isLocalDevelopment) {
-      // Docker-compose: Board Service 직접 연결
-      return `ws://localhost:8000/api/boards/ws/project/${projectId}?token=${encodeURIComponent(token)}`;
-    }
-
-    // 운영: ALB를 통한 라우팅
-    const protocol = INJECTED_API_BASE_URL.startsWith('https') ? 'wss:' : 'ws:';
-    const host = INJECTED_API_BASE_URL.replace(/^https?:\/\//, '');
-
-    // 🔥 /api/boards/ws/project/{projectId}
-    return `${protocol}//${host}/api/boards/ws/project/${projectId}?token=${encodeURIComponent(
-      token,
-    )}`;
-  }
-
-  // Fallback (환경 변수 없을 때)
-  const host = window.location.host;
-
-  if (host.includes('localhost') || host.includes('127.0.0.1')) {
-    return `ws://localhost:8000/api/boards/ws/project/${projectId}?token=${encodeURIComponent(token)}`;
-  }
-
-  return `wss://api.wealist.co.kr/api/boards/ws/project/${projectId}?token=${encodeURIComponent(
-    token,
-  )}`;
-};
 
 export const connectWebSocket = (projectId: string, onMessage: (data: any) => void) => {
   // 🔥 이미 연결 중이면 무시
@@ -87,7 +48,7 @@ export const connectWebSocket = (projectId: string, onMessage: (data: any) => vo
       return;
     }
 
-    const wsUrl = getWebSocketUrl(projectId, token);
+    const wsUrl = getBoardWebSocketUrl(projectId, token);
     console.log('🔌 [WS] 연결 시도:', wsUrl);
 
     isConnecting = true; // 🔥 연결 시작

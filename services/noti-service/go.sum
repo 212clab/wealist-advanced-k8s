@@ -1,7 +1,5 @@
 github.com/KyleBanks/depth v1.2.1 h1:5h8fQADFrWtarTdtDudMmGsC7GPbOAu6RVB3ffsVFHc=
 github.com/KyleBanks/depth v1.2.1/go.mod h1:jzSb9d0L43HxTQfT+oSA1EEp2q+ne2uh6XgeJcm8brE=
-github.com/OrangesCloud/wealist-advanced-go-pkg v0.3.0 h1:tZ6Geaw2gHDAQUzPNlTyppDLD/1vGqQvNJfvTWdnE74=
-github.com/OrangesCloud/wealist-advanced-go-pkg v0.3.0/go.mod h1:tzqd3l+eI+Z1HWVQaKLyhx4Ji72I31JeTYBb17EEiaE=
 github.com/PuerkitoBio/purell v1.1.1 h1:WEQqlqaGbrPkxLJWfBwQmfEAE1Z7ONdDLqrN38tNFfI=
 github.com/PuerkitoBio/purell v1.1.1/go.mod h1:c11w/QuzBsJSee3cPx9rAFu61PvFxuPbtSwDGJws/X0=
 github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 h1:d+Bc7a5rLufV/sSk/8dngufqelfh6jnri85riMAaF/M=
@@ -191,3 +189,5 @@ gorm.io/gorm v1.25.12 h1:I0u8i2hWQItBq1WfE0o2+WuL9+8L21K9e2HHSTE/0f8=
 gorm.io/gorm v1.25.12/go.mod h1:xh7N7RHfYlNc5EmcI/El95gXusucDrQnHXe0+CgWcLQ=
 nullprogram.com/x/optparse v1.0.0/go.mod h1:KdyPE+Igbe0jQUrVfMqDMeJQIJZEuyV7pjYmp6pbG50=
 rsc.io/pdf v0.1.1/go.mod h1:n8OzWcQ6Sp37PL01nO98y4iUCRdTGarVfzxY20ICaU4=
+github.com/OrangesCloud/wealist-advanced-go-pkg v0.4.0 h1:tdpUZzNQZibWkV4mvaQ8z7EpLi4PIX/NL620RLcrOJQ=
+github.com/OrangesCloud/wealist-advanced-go-pkg v0.4.0/go.mod h1:tnkEXcM5hwnMNOBXH1uafsxmbpOAom8sSyk1jiriVUg=

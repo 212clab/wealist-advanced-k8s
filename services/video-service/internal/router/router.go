@@ -27,14 +27,7 @@ func Setup(cfg *config.Config, db *gorm.DB, redisClient *redis.Client, logger *z
 	// Middleware (using common package)
 	r.Use(commonmw.Recovery(logger))
 	r.Use(commonmw.Logger(logger))
-	r.Use(commonmw.CORS(commonmw.CORSConfig{
-		AllowedOrigins:   []string{"*"},
-		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
-		AllowedHeaders:   []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Request-ID", "X-Workspace-Id"},
-		ExposedHeaders:   []string{"X-Request-ID"},
-		AllowCredentials: true,
-		MaxAge:           86400,
-	}))
+	r.Use(commonmw.DefaultCORS())
 	r.Use(commonmw.Metrics())
 
 	// Initialize repositories

@@ -34,10 +34,10 @@ const getIngressServicePrefix = (path: string): string => {
   if (path?.includes('/api/workspaces')) return '/svc/user';
   if (path?.includes('/api/profiles')) return '/svc/user';
   if (path?.includes('/api/boards')) return '/svc/board/api';
-  if (path?.includes('/api/chats')) return '/svc/chat';
+  if (path?.includes('/api/chats')) return `/svc/chat${path}`;
   if (path?.includes('/api/notifications')) return '/svc/noti';
   if (path?.includes('/api/storage')) return '/svc/storage/api';
-  if (path?.includes('/api/video')) return '/svc/video/api';
+  if (path?.includes('/api/video')) return '/svc/video';
   return ''; // 매칭 안 되면 prefix 없이
 };
 
@@ -66,7 +66,7 @@ const getApiBaseUrl = (path: string): string => {
       if (path?.includes('/api/chats')) return `${INJECTED_API_BASE_URL}:8001${path}`;
       if (path?.includes('/api/notifications')) return `${INJECTED_API_BASE_URL}:8002`;
       if (path?.includes('/api/storage')) return `${INJECTED_API_BASE_URL}:8003/api`; // storage-service (base path only)
-      if (path?.includes('/api/video')) return `${INJECTED_API_BASE_URL}:8004/api`;
+      if (path?.includes('/api/video')) return `${INJECTED_API_BASE_URL}:8004`;
     }
 
     return `${INJECTED_API_BASE_URL}${path}`;

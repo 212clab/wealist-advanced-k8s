@@ -26,6 +26,10 @@ spec:
             # Service-specific config
             - configMapRef:
                 name: frontend-config
+          volumeMounts:
+            - name: runtime-config
+              mountPath: /usr/share/nginx/html/config.js
+              subPath: config.js
           livenessProbe:
             httpGet:
               path: /
@@ -45,3 +49,7 @@ spec:
             limits:
               memory: "128Mi"
               cpu: "100m"
+      volumes:
+        - name: runtime-config
+          configMap:
+            name: frontend-runtime-config

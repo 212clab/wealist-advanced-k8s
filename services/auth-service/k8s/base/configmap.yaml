@@ -10,6 +10,6 @@ data:
   SPRING_REDIS_PORT: "6379"
   # Service URLs
   USER_SERVICE_URL: "http://user-service:8081"
-  # OAuth2 설정 - 로컬 개발용
-  OAUTH2_REDIRECT_URL_ENV: "http://localhost:3000/oauth/callback"
-  OAUTH2_CLIENT_REDIRECT_URI: "http://localhost:8080/login/oauth2/code/google"
+  # OAuth2 설정 - K8s Ingress용 (localhost:80)
+  OAUTH2_REDIRECT_URL_ENV: "http://localhost/oauth/callback"
+  OAUTH2_CLIENT_REDIRECT_URI: "http://localhost/login/oauth2/code/google"

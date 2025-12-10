@@ -22,6 +22,8 @@ spec:
           envFrom:
             - configMapRef:
                 name: wealist-shared-config
+            - configMapRef:
+                name: auth-service-config
             - secretRef:
                 name: wealist-shared-secrets
           env:
@@ -31,6 +33,8 @@ spec:
               value: "redis"
             - name: SPRING_REDIS_PORT
               value: "6379"
+            - name: USER_SERVICE_URL
+              value: "http://user-service:8081"
           livenessProbe:
             httpGet:
               path: /health

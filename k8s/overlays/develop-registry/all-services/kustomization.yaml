@@ -12,7 +12,7 @@ resources:
   # Base resources (namespace, shared config, ingress)
   - ../../../base/namespace-dev
   - ../../../base/shared
-  - ../../develop/ingress.yaml
+  - ingress.yaml
 
   # Infrastructure
   - ../../../../infrastructure/overlays/develop

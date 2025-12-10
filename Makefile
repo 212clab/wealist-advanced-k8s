@@ -1,5 +1,6 @@
 .PHONY: help dev-up dev-down dev-logs build-all build-% deploy-local deploy-eks clean \
-        k8s-deploy k8s-deploy-registry k8s-deploy-dockerhub build-dockerhub k8s-apply-dockerhub
+        k8s-deploy k8s-deploy-registry k8s-deploy-dockerhub build-dockerhub k8s-apply-dockerhub \
+        infra-setup
 
 # Kind cluster name (default: wealist)
 KIND_CLUSTER ?= wealist
@@ -22,6 +23,7 @@ help:
 	@echo ""
 	@echo "  Kind Cluster:"
 	@echo "    make kind-setup         - Create cluster + local registry (recommended)"
+	@echo "    make infra-setup        - Load infra images (postgres, redis, etc.) to registry"
 	@echo "    make kind-create        - Create simple cluster (no registry)"
 	@echo "    make kind-delete        - Delete cluster"
 	@echo ""
@@ -107,6 +109,13 @@ build-frontend:
 kind-setup:
 	@echo "Setting up Kind cluster with local registry..."
 	./docker/scripts/dev/0.setup-cluster.sh
+	@echo ""
+	@echo "Next: make infra-setup"
+
+# Load infrastructure images to local registry (postgres, redis, livekit, coturn)
+infra-setup:
+	@echo "Loading infrastructure images to local registry..."
+	./docker/scripts/dev/1.load_infra_images.sh
 	@echo ""
 	@echo "Next: make k8s-deploy-registry"
 

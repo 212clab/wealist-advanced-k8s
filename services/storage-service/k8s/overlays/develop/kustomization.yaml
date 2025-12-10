@@ -10,9 +10,8 @@ resources:
   - ../../base
 
 images:
-  - name: wealist/storage-service
-    newName: localhost:5001/storage-service
-    newTag: v1
+  - name: storage-service
+    newTag: local
 
 replicas:
   - name: storage-service

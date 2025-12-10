@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: chat-service
-          image: chat-service
+          image: chat-service:latest
           ports:
             - containerPort: 8001
           envFrom:

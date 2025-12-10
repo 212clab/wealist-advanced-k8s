@@ -10,9 +10,8 @@ resources:
   - ../../base
 
 images:
-  - name: wealist/video-service
-    newName: localhost:5001/video-service
-    newTag: v1
+  - name: video-service
+    newTag: local
 
 replicas:
   - name: video-service

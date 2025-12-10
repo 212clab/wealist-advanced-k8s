@@ -11,8 +11,7 @@ resources:
 
 images:
   - name: board-service
-    newName: localhost:5001/board-service
-    newTag: v1
+    newTag: local
 
 replicas:
   - name: board-service

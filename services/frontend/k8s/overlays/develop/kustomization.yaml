@@ -11,8 +11,7 @@ resources:
 
 images:
   - name: frontend
-    newName: localhost:5001/frontend
-    newTag: v1
+    newTag: local
 
 replicas:
   - name: frontend

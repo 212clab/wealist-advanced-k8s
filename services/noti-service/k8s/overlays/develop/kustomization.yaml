@@ -11,8 +11,7 @@ resources:
 
 images:
   - name: noti-service
-    newName: localhost:5001/noti-service
-    newTag: v1
+    newTag: local
 
 replicas:
   - name: noti-service

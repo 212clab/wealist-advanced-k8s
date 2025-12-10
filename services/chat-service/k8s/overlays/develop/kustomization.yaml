@@ -11,8 +11,7 @@ resources:
 
 images:
   - name: chat-service
-    newName: localhost:5001/chat-service
-    newTag: v1
+    newTag: local
 
 replicas:
   - name: chat-service

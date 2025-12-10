@@ -11,8 +11,7 @@ resources:
 
 images:
   - name: user-service
-    newName: localhost:5001/user-service
-    newTag: v1
+    newTag: local
 
 replicas:
   - name: user-service

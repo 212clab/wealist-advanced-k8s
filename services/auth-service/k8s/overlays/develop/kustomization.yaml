@@ -11,8 +11,7 @@ resources:
 
 images:
   - name: auth-service
-    newName: localhost:5001/auth-service
-    newTag: v1
+    newTag: local
 
 replicas:
   - name: auth-service

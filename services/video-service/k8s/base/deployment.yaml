@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
         - name: video-service
-          image: wealist/video-service:latest
+          image: video-service:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8004

@@ -25,6 +25,7 @@ help:
 	@echo "    make kind-load-<svc>    - Load specific service image to kind"
 	@echo ""
 	@echo "  Kubernetes (Local/Kind):"
+	@echo "    make k8s-deploy         - Build, load images & deploy all (recommended)"
 	@echo "    make k8s-apply-local    - Load images & apply k8s manifests (local)"
 	@echo "    make k8s-delete-local   - Delete all k8s resources (local)"
 	@echo "    make kustomize-<svc>    - Preview kustomize output for service"
@@ -132,55 +133,65 @@ kind-load-frontend:
 # Kubernetes - Local (Kustomize + Kind)
 # =============================================================================
 
+# One-command deploy: build, load, and apply all
+k8s-deploy: build-all kind-load-all
+	@echo "Deploying all services to Kind cluster..."
+	kubectl apply -k k8s/overlays/develop/all-services
+	@echo ""
+	@echo "Deployment complete! Check status with: make status"
+	@echo "Add to /etc/hosts: 127.0.0.1 wealist.local"
+
 k8s-apply-local: kind-load-all
-	kubectl apply -k infrastructure/overlays/local
-	kubectl apply -k services/user-service/k8s/overlays/local
-	kubectl apply -k services/auth-service/k8s/overlays/local
-	kubectl apply -k services/board-service/k8s/overlays/local
-	kubectl apply -k services/chat-service/k8s/overlays/local
-	kubectl apply -k services/noti-service/k8s/overlays/local
-	kubectl apply -k services/storage-service/k8s/overlays/local
-	kubectl apply -k services/video-service/k8s/overlays/local
-	kubectl apply -k services/frontend/k8s/overlays/local
+	kubectl apply -k k8s/overlays/develop
+	kubectl apply -k infrastructure/overlays/develop
+	kubectl apply -k services/user-service/k8s/overlays/develop
+	kubectl apply -k services/auth-service/k8s/overlays/develop
+	kubectl apply -k services/board-service/k8s/overlays/develop
+	kubectl apply -k services/chat-service/k8s/overlays/develop
+	kubectl apply -k services/noti-service/k8s/overlays/develop
+	kubectl apply -k services/storage-service/k8s/overlays/develop
+	kubectl apply -k services/video-service/k8s/overlays/develop
+	kubectl apply -k services/frontend/k8s/overlays/develop
 
 k8s-delete-local:
-	kubectl delete -k services/frontend/k8s/overlays/local --ignore-not-found
-	kubectl delete -k services/video-service/k8s/overlays/local --ignore-not-found
-	kubectl delete -k services/storage-service/k8s/overlays/local --ignore-not-found
-	kubectl delete -k services/noti-service/k8s/overlays/local --ignore-not-found
-	kubectl delete -k services/chat-service/k8s/overlays/local --ignore-not-found
-	kubectl delete -k services/board-service/k8s/overlays/local --ignore-not-found
-	kubectl delete -k services/auth-service/k8s/overlays/local --ignore-not-found
-	kubectl delete -k services/user-service/k8s/overlays/local --ignore-not-found
-	kubectl delete -k infrastructure/overlays/local --ignore-not-found
+	kubectl delete -k services/frontend/k8s/overlays/develop --ignore-not-found
+	kubectl delete -k services/video-service/k8s/overlays/develop --ignore-not-found
+	kubectl delete -k services/storage-service/k8s/overlays/develop --ignore-not-found
+	kubectl delete -k services/noti-service/k8s/overlays/develop --ignore-not-found
+	kubectl delete -k services/chat-service/k8s/overlays/develop --ignore-not-found
+	kubectl delete -k services/board-service/k8s/overlays/develop --ignore-not-found
+	kubectl delete -k services/auth-service/k8s/overlays/develop --ignore-not-found
+	kubectl delete -k services/user-service/k8s/overlays/develop --ignore-not-found
+	kubectl delete -k infrastructure/overlays/develop --ignore-not-found
+	kubectl delete -k k8s/overlays/develop --ignore-not-found
 
 # Preview kustomize output
 kustomize-infra:
-	kubectl kustomize infrastructure/overlays/local
+	kubectl kustomize infrastructure/overlays/develop
 
 kustomize-user-service:
-	kubectl kustomize services/user-service/k8s/overlays/local
+	kubectl kustomize services/user-service/k8s/overlays/develop
 
 kustomize-auth-service:
-	kubectl kustomize services/auth-service/k8s/overlays/local
+	kubectl kustomize services/auth-service/k8s/overlays/develop
 
 kustomize-board-service:
-	kubectl kustomize services/board-service/k8s/overlays/local
+	kubectl kustomize services/board-service/k8s/overlays/develop
 
 kustomize-chat-service:
-	kubectl kustomize services/chat-service/k8s/overlays/local
+	kubectl kustomize services/chat-service/k8s/overlays/develop
 
 kustomize-noti-service:
-	kubectl kustomize services/noti-service/k8s/overlays/local
+	kubectl kustomize services/noti-service/k8s/overlays/develop
 
 kustomize-storage-service:
-	kubectl kustomize services/storage-service/k8s/overlays/local
+	kubectl kustomize services/storage-service/k8s/overlays/develop
 
 kustomize-video-service:
-	kubectl kustomize services/video-service/k8s/overlays/local
+	kubectl kustomize services/video-service/k8s/overlays/develop
 
 kustomize-frontend:
-	kubectl kustomize services/frontend/k8s/overlays/local
+	kubectl kustomize services/frontend/k8s/overlays/develop
 
 # =============================================================================
 # Kubernetes - EKS
@@ -226,5 +237,5 @@ status:
 	@echo "=== Docker Containers ==="
 	docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 	@echo ""
-	@echo "=== Kubernetes Pods (wealist-local) ==="
-	kubectl get pods -n wealist-local 2>/dev/null || echo "Namespace not found"
+	@echo "=== Kubernetes Pods (wealist-dev) ==="
+	kubectl get pods -n wealist-dev 2>/dev/null || echo "Namespace not found"

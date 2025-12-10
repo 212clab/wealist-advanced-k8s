@@ -16,6 +16,7 @@ namespace: wealist-dev
 resources:
   - ../../base/namespace/namespace.yaml
   - ../../base/shared
+  - ingress.yaml
 
 commonLabels:
   app.kubernetes.io/env: develop

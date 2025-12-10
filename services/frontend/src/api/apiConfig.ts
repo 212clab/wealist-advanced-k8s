@@ -464,3 +464,33 @@ export const getNotificationSSEUrl = (token?: string): string => {
   // 운영 환경 또는 Fallback
   return `${NOTI_SERVICE_API_URL}/api/notifications/stream?token=${encodedToken}`;
 };
+
+/**
+ * OAuth2 Base URL 생성 (Google 로그인 등)
+ */
+export const getOAuthBaseUrl = (): string => {
+  // K8s ingress 모드: 상대 경로 사용 (같은 도메인)
+  if (isIngressMode) {
+    return '';
+  }
+
+  // Docker-compose (로컬 개발): auth-service 8080 포트
+  if (INJECTED_API_BASE_URL?.includes('localhost')) {
+    return `${INJECTED_API_BASE_URL}:8080`;
+  }
+
+  // 운영 환경
+  if (INJECTED_API_BASE_URL) {
+    return `${INJECTED_API_BASE_URL}/api/users`;
+  }
+
+  // Fallback
+  return 'https://api.wealist.co.kr/api/users';
+};
+
+/**
+ * Google OAuth2 인증 URL
+ */
+export const getGoogleAuthUrl = (): string => {
+  return `${getOAuthBaseUrl()}/oauth2/authorization/google`;
+};

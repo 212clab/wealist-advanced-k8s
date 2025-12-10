@@ -16,7 +16,7 @@ kind: Kustomization
 namespace: wealist-prod
 
 resources:
-  - ../../base/namespace/namespace.yaml
+  - ../../base/namespace
   - ../../base/shared
 
 commonLabels:

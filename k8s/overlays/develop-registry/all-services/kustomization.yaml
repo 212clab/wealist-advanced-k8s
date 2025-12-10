@@ -9,13 +9,12 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-  # Base resources (namespace, shared config, ingress)
-  - ../../../base/namespace-dev
+  # Infrastructure (includes namespace)
+  - ../../../../infrastructure/overlays/develop
+
+  # Shared config & ingress
   - ../../../base/shared
   - ingress.yaml
-
-  # Infrastructure
-  - ../../../../infrastructure/overlays/develop
 
   # Backend Services (base only, we override images here)
   - ../../../../services/auth-service/k8s/base

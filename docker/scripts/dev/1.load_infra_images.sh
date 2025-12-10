@@ -1,7 +1,6 @@
 #!/bin/bash
 # 인프라 이미지를 로컬 레지스트리에 푸시
-# postgres/redis: AWS ECR Public (무료, rate limit 없음)
-# coturn/livekit: Docker Hub
+# 이미 로컬 레지스트리에 있으면 스킵
 
 set -e
 
@@ -15,8 +14,20 @@ if ! curl -s "http://${LOCAL_REG}/v2/" > /dev/null 2>&1; then
     exit 1
 fi
 
+# 로컬 레지스트리에 이미지 있는지 확인
+image_exists() {
+    local name=$1 tag=$2
+    curl -sf "http://${LOCAL_REG}/v2/${name}/manifests/${tag}" > /dev/null 2>&1
+}
+
 load() {
     local src=$1 name=$2 tag=$3
+
+    if image_exists "$name" "$tag"; then
+        echo "✓ ${name}:${tag} - 이미 있음 (스킵)"
+        return
+    fi
+
     echo "$src → ${LOCAL_REG}/${name}:${tag}"
     docker pull --platform linux/amd64 "$src"
     docker tag "$src" "${LOCAL_REG}/${name}:${tag}"
@@ -27,7 +38,7 @@ load() {
 load "public.ecr.aws/docker/library/postgres:15-alpine" "postgres" "15-alpine"
 load "public.ecr.aws/docker/library/redis:7-alpine" "redis" "7-alpine"
 
-# Docker Hub (유료 계정)
+# Docker Hub
 load "coturn/coturn:4.6" "coturn" "4.6"
 load "livekit/livekit-server:v1.5" "livekit" "v1.5"
 

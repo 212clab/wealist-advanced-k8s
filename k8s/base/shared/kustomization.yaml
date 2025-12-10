@@ -8,6 +8,8 @@ resources:
   - configmap-shared.yaml
   - secret-shared.yaml
 
-commonLabels:
-  app.kubernetes.io/part-of: wealist
-  app.kubernetes.io/managed-by: kustomize
+labels:
+  - pairs:
+      app.kubernetes.io/part-of: wealist
+      app.kubernetes.io/managed-by: kustomize
+    includeSelectors: false

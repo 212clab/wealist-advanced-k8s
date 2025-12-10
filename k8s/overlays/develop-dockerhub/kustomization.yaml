@@ -20,9 +20,11 @@ resources:
   - ../../base/shared
   - ../develop/ingress.yaml
 
-commonLabels:
-  app.kubernetes.io/env: develop
-  app.kubernetes.io/registry: dockerhub
+labels:
+  - pairs:
+      app.kubernetes.io/env: develop
+      app.kubernetes.io/registry: dockerhub
+    includeSelectors: false
 
 patches:
   - target:

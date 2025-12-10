@@ -18,8 +18,10 @@ resources:
   - ../../base/shared
   - ingress.yaml
 
-commonLabels:
-  app.kubernetes.io/env: develop
+labels:
+  - pairs:
+      app.kubernetes.io/env: develop
+    includeSelectors: false
 
 # ConfigMap 값 오버라이드
 patches:

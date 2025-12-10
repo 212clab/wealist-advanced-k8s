@@ -58,6 +58,8 @@ images:
 namespace: wealist-dev
 
 # Common labels
-commonLabels:
-  app.kubernetes.io/env: develop
-  app.kubernetes.io/registry: local
+labels:
+  - pairs:
+      app.kubernetes.io/env: develop
+      app.kubernetes.io/registry: local
+    includeSelectors: false

@@ -17,6 +17,8 @@ make k8s-deploy-services (빌드 + ns 생성 + 배포)
 -> kubectl get pods -n wealist-dev 로 확인하세요
 make status
 
+## ingress 적용!!! > locahost로 접속하세요
+
 ## 그 외
 
 kind get clusters (클러스터 확인)

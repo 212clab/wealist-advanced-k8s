@@ -10,16 +10,46 @@ declare global {
 }
 
 // 환경 변수 가져오기 (우선순위: runtime config > build-time env)
-// - K8s: window.__ENV__ (ConfigMap에서 주입)
-// - local: import.meta.env.VITE_API_BASE_URL (빌드 타임)
-const INJECTED_API_BASE_URL = window.__ENV__?.API_BASE_URL || import.meta.env.VITE_API_BASE_URL;
+// - K8s ingress: window.__ENV__.API_BASE_URL = "" (빈 문자열 = 상대 경로)
+// - Docker-compose: import.meta.env.VITE_API_BASE_URL = "http://localhost" (포트별 접근)
+// - Production: 빌드 시 주입된 URL 사용
+
+// K8s ingress 모드 감지: 명시적으로 빈 문자열이 설정된 경우
+const isIngressMode = window.__ENV__?.API_BASE_URL === '';
+
+// ingress 모드가 아닐 때만 폴백 적용
+const INJECTED_API_BASE_URL = isIngressMode
+  ? ''
+  : window.__ENV__?.API_BASE_URL || import.meta.env.VITE_API_BASE_URL;
 
 // ============================================================================
 // 💡 [핵심 수정]: Context Path를 환경에 따라 조건부로 붙입니다.
 // ============================================================================
 
+// K8s ingress용 서비스 prefix 매핑
+// ingress가 /svc/{service}/* 로 라우팅하고, rewrite로 prefix 제거
+const getIngressServicePrefix = (path: string): string => {
+  if (path?.includes('/api/auth')) return '/svc/auth';
+  if (path?.includes('/api/users')) return '/svc/user';
+  if (path?.includes('/api/workspaces')) return '/svc/user';
+  if (path?.includes('/api/profiles')) return '/svc/user';
+  if (path?.includes('/api/boards')) return '/svc/board';
+  if (path?.includes('/api/chats')) return '/svc/chat';
+  if (path?.includes('/api/notifications')) return '/svc/noti';
+  if (path?.includes('/api/storage')) return '/svc/storage';
+  if (path?.includes('/api/video')) return '/svc/video';
+  return ''; // 매칭 안 되면 prefix 없이
+};
+
 const getApiBaseUrl = (path: string): string => {
-  // 1. 환경 변수 주입 확인
+  // 1. K8s ingress 모드: 서비스 prefix만 반환 (axios가 path를 붙임)
+  // 예: getApiBaseUrl('/api/users') → '/svc/user'
+  //     axios.get('/api/workspaces/all') → '/svc/user/api/workspaces/all'
+  if (isIngressMode) {
+    return getIngressServicePrefix(path);
+  }
+
+  // 2. 환경 변수 주입 확인 (Docker-compose 등)
   if (INJECTED_API_BASE_URL) {
     // 쉘 스크립트에서 VITE_API_BASE_URL='http://localhost'가 주입된 경우
     const isLocalDevelopment = INJECTED_API_BASE_URL.includes('localhost');
@@ -36,6 +66,7 @@ const getApiBaseUrl = (path: string): string => {
       if (path?.includes('/api/chats')) return `${INJECTED_API_BASE_URL}:8001${path}`;
       if (path?.includes('/api/notifications')) return `${INJECTED_API_BASE_URL}:8002`;
       if (path?.includes('/api/storage')) return `${INJECTED_API_BASE_URL}:8003/api`; // storage-service (base path only)
+      if (path?.includes('/api/video')) return `${INJECTED_API_BASE_URL}:8004/api`;
     }
 
     return `${INJECTED_API_BASE_URL}${path}`;

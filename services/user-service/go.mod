@@ -83,6 +83,3 @@ require (
 	google.golang.org/protobuf v1.34.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
-
-// Use local common package for development (remove after pushing to GitHub)
-replace github.com/OrangesCloud/wealist-advanced-go-pkg => ../../pkg/common

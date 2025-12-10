@@ -5,6 +5,7 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
+	commonmw "github.com/OrangesCloud/wealist-advanced-go-pkg/middleware"
 	"storage-service/internal/client"
 	"storage-service/internal/handler"
 	"storage-service/internal/middleware"
@@ -36,7 +37,7 @@ func Setup(cfg Config) *gin.Engine {
 	if corsOrigins == "" {
 		corsOrigins = "*"
 	}
-	r.Use(middleware.CORS(corsOrigins))
+	r.Use(commonmw.CORSWithOrigins(corsOrigins)) // CORS from common package
 	r.Use(middleware.Metrics()) // Prometheus metrics
 
 	// Prometheus metrics endpoint

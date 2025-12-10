@@ -14,6 +14,8 @@ import (
 	// ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
+
+	commonmw "github.com/OrangesCloud/wealist-advanced-go-pkg/middleware"
 )
 
 func Setup(cfg *config.Config, db *gorm.DB, redisClient *redis.Client, logger *zap.Logger) *gin.Engine {
@@ -24,7 +26,7 @@ func Setup(cfg *config.Config, db *gorm.DB, redisClient *redis.Client, logger *z
 	r := gin.New()
 	r.Use(gin.Recovery())
 	r.Use(middleware.LoggerMiddleware(logger))
-	r.Use(middleware.CORSMiddleware("*"))
+	r.Use(commonmw.DefaultCORS()) // CORS from common package
 	r.Use(middleware.MetricsMiddleware()) // Prometheus metrics
 
 	// Initialize repositories

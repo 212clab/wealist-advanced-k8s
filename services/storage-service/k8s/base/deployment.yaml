@@ -18,12 +18,18 @@ spec:
     spec:
       containers:
         - name: storage-service
-          image: wealist/storage-service:latest
+          image: storage-service:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8003
               protocol: TCP
           envFrom:
+            # Shared config (loaded first, can be overridden by service-specific)
+            - configMapRef:
+                name: wealist-shared-config
+            - secretRef:
+                name: wealist-shared-secrets
+            # Service-specific config (overrides shared)
             - configMapRef:
                 name: storage-service-config
             - secretRef:

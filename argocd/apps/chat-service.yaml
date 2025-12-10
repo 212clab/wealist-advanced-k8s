@@ -11,7 +11,7 @@ spec:
     path: services/chat-service/k8s/overlays/local
   destination:
     server: https://kubernetes.default.svc
-    namespace: wealist-local
+    namespace: wealist-dev
   syncPolicy:
     automated:
       prune: true

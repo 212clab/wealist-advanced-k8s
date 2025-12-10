@@ -150,14 +150,7 @@ services:
         condition: service_healthy
 
     healthcheck:
-      test:
-        [
-          "CMD",
-          "wget",
-          "-q",
-          "--spider",
-          "http://localhost:8080/health",
-        ]
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -610,7 +603,8 @@ services:
   frontend-service:
     build:
       context: ../../services/frontend
-      dockerfile: Dockerfile.local
+      dockerfile: Dockerfile
+      target: development
     image: wealist/frontend:${VERSION:-latest}
     container_name: wealist-frontend
     hostname: frontend
@@ -856,7 +850,7 @@ services:
     environment:
       - MINIO_ROOT_USER=${MINIO_ROOT_USER:-minioadmin}
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-minioadmin}
-      - S3_BUCKET=${S3_BUCKET:-wealist-local-files}
+      - S3_BUCKET=${S3_BUCKET:-wealist-dev-files}
 
     entrypoint: >
       /bin/sh -c "

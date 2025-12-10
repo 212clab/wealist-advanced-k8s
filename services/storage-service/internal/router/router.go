@@ -2,9 +2,11 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
+	commonmw "github.com/OrangesCloud/wealist-advanced-go-pkg/middleware"
 	"storage-service/internal/client"
 	"storage-service/internal/handler"
 	"storage-service/internal/middleware"
@@ -14,33 +16,26 @@ import (
 
 // Config holds router configuration
 type Config struct {
-	DB          *gorm.DB
-	Logger      *zap.Logger
-	JWTSecret   string
-	BasePath    string
-	CORSOrigins string
-	S3Client    *client.S3Client
-	AuthClient  *client.AuthClient
+	DB         *gorm.DB
+	Logger     *zap.Logger
+	JWTSecret  string
+	BasePath   string
+	S3Client   *client.S3Client
+	AuthClient *client.AuthClient
 }
 
 // Setup sets up the router with all routes
 func Setup(cfg Config) *gin.Engine {
 	r := gin.New()
 
-	// Middleware
-	r.Use(gin.Recovery())
-	r.Use(middleware.Logger(cfg.Logger))
-
-	// CORS - use config value, default to "*" if not set
-	corsOrigins := cfg.CORSOrigins
-	if corsOrigins == "" {
-		corsOrigins = "*"
-	}
-	r.Use(middleware.CORS(corsOrigins))
-	r.Use(middleware.Metrics()) // Prometheus metrics
+	// Middleware (using common package)
+	r.Use(commonmw.Recovery(cfg.Logger))
+	r.Use(commonmw.Logger(cfg.Logger))
+	r.Use(commonmw.DefaultCORS())
+	r.Use(commonmw.Metrics())
 
 	// Prometheus metrics endpoint
-	r.GET("/metrics", middleware.MetricsHandler())
+	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	// Health check routes
 	r.GET("/health", func(c *gin.Context) {

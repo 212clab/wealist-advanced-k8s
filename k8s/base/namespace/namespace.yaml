@@ -1,0 +1,26 @@
+# =============================================================================
+# weAlist Namespace Definition
+# =============================================================================
+# 환경별 네임스페이스:
+#   - wealist-dev: develop (Kind) 환경
+#   - wealist-prod: production (EKS) 환경
+#
+# 적용: kubectl apply -f namespace.yaml
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: wealist-dev
+  labels:
+    app.kubernetes.io/name: wealist
+    app.kubernetes.io/env: develop
+    # Istio sidecar injection (나중에 서비스 메시 적용 시)
+    # istio-injection: enabled
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: wealist-prod
+  labels:
+    app.kubernetes.io/name: wealist
+    app.kubernetes.io/env: production

@@ -30,10 +30,10 @@ services:
       # Service URLs
       - USER_SERVICE_URL=http://host.docker.internal:8081
       - AUTH_SERVICE_URL=http://host.docker.internal:8080
-      - NOTI_SERVICE_URL=http://host.docker.internal:8084
+      - NOTI_SERVICE_URL=http://host.docker.internal:8002
       - INTERNAL_API_KEY=internal-secret-key
       # S3/MinIO
-      - S3_BUCKET=wealist-local-files
+      - S3_BUCKET=wealist-dev-files
       - S3_REGION=ap-northeast-2
       - S3_ENDPOINT=http://host.docker.internal:9000
       - S3_PUBLIC_ENDPOINT=http://localhost:9000

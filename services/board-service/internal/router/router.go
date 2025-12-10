@@ -12,6 +12,7 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
+	commonmw "github.com/OrangesCloud/wealist-advanced-go-pkg/middleware"
 	"project-board-api/internal/client"
 	"project-board-api/internal/converter"
 	"project-board-api/internal/database"
@@ -38,12 +39,11 @@ func Setup(cfg Config) *gin.Engine {
 	// Create Gin router
 	router := gin.New()
 
-	// Apply global middleware chain
+	// Apply global middleware chain (using common package)
 	router.Use(
-		middleware.Recovery(cfg.Logger), // 1. Panic recovery
-		middleware.RequestID(),          // 2. Request ID tracking
-		middleware.Logger(cfg.Logger),   // 3. Request logging
-		middleware.CORS(),               // 4. CORS configuration
+		commonmw.Recovery(cfg.Logger), // 1. Panic recovery
+		commonmw.Logger(cfg.Logger),   // 2. Request logging (includes request ID)
+		commonmw.DefaultCORS(),        // 3. CORS configuration (includes X-Workspace-Id)
 	)
 
 	// Add metrics middleware if metrics is configured

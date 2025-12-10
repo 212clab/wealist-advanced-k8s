@@ -18,12 +18,18 @@ spec:
     spec:
       containers:
         - name: video-service
-          image: wealist/video-service:latest
+          image: video-service:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8004
               protocol: TCP
           envFrom:
+            # Shared config (loaded first, can be overridden by service-specific)
+            - configMapRef:
+                name: wealist-shared-config
+            - secretRef:
+                name: wealist-shared-secrets
+            # Service-specific config (overrides shared)
             - configMapRef:
                 name: video-service-config
             - secretRef:

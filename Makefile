@@ -1,43 +1,52 @@
-.PHONY: help dev-up dev-down dev-logs build-all build-% deploy-local deploy-eks clean
+.PHONY: help dev-up dev-down dev-logs build-all build-% deploy-local deploy-eks clean \
+        k8s-deploy k8s-deploy-registry k8s-deploy-dockerhub build-dockerhub k8s-apply-dockerhub
 
 # Kind cluster name (default: wealist)
 KIND_CLUSTER ?= wealist
+# Local registry (for Docker Hub rate limit bypass)
+LOCAL_REGISTRY ?= localhost:5001
 
 # Default target
 help:
 	@echo "Wealist Project - Available commands:"
 	@echo ""
-	@echo "  Development:"
+	@echo "  Development (Docker Compose):"
 	@echo "    make dev-up          - Start all services with Docker Compose"
 	@echo "    make dev-down        - Stop all services"
 	@echo "    make dev-logs        - View logs from all services"
 	@echo "    make dev-restart     - Restart all services"
-	@echo "    make dev-build       - Build all services"
 	@echo ""
 	@echo "  Build:"
-	@echo "    make build-all       - Build all service images"
-	@echo "    make build-<service> - Build specific service (e.g., build-user-service)"
+	@echo "    make build-all       - Build all service images (:local tag)"
+	@echo "    make build-<service> - Build specific service"
 	@echo ""
-	@echo "  Kind (Local Kubernetes):"
-	@echo "    make kind-create        - Create kind cluster"
-	@echo "    make kind-delete        - Delete kind cluster"
-	@echo "    make kind-load-all      - Load all images to kind cluster"
-	@echo "    make kind-load-<svc>    - Load specific service image to kind"
+	@echo "  Kind Cluster:"
+	@echo "    make kind-setup         - Create cluster + local registry (recommended)"
+	@echo "    make kind-create        - Create simple cluster (no registry)"
+	@echo "    make kind-delete        - Delete cluster"
 	@echo ""
-	@echo "  Kubernetes (Local/Kind):"
-	@echo "    make k8s-apply-local    - Load images & apply k8s manifests (local)"
-	@echo "    make k8s-delete-local   - Delete all k8s resources (local)"
-	@echo "    make kustomize-<svc>    - Preview kustomize output for service"
+	@echo "  Kubernetes (Local/Kind) - Choose ONE method:"
+	@echo "    [Method 1: kind load - Simple, fast]"
+	@echo "    make k8s-deploy         - Build + kind load + deploy all"
+	@echo ""
+	@echo "    [Method 2: Local Registry - Docker Hub limit bypass]"
+	@echo "    make k8s-deploy-registry - Build + push to registry + deploy all"
+	@echo ""
+	@echo "    [Method 3: Docker Hub - Push to Docker Hub]"
+	@echo "    DOCKER_HUB_ID=<id> make k8s-deploy-dockerhub - Build + push + deploy"
+	@echo ""
+	@echo "    [Manual]"
+	@echo "    make k8s-apply          - Apply manifests only (images must exist)"
+	@echo "    make k8s-delete         - Delete all k8s resources"
 	@echo ""
 	@echo "  Kubernetes (EKS):"
 	@echo "    make k8s-apply-eks      - Apply all k8s manifests (EKS)"
 	@echo "    make k8s-delete-eks     - Delete all k8s resources (EKS)"
 	@echo ""
 	@echo "  Utility:"
+	@echo "    make status          - Show status of containers and pods"
 	@echo "    make clean           - Clean build artifacts and volumes"
 	@echo "    make test-health     - Test health endpoints"
-	@echo "    make status          - Show status of containers and pods"
-	@echo "    make monitoring      - Start monitoring stack"
 
 # =============================================================================
 # Development (Docker Compose)
@@ -94,12 +103,26 @@ build-frontend:
 # Kind (Local Kubernetes Cluster)
 # =============================================================================
 
+# Full setup with local registry (recommended - bypasses Docker Hub limits)
+kind-setup:
+	@echo "Setting up Kind cluster with local registry..."
+	./docker/scripts/local/0.setup-cluster.sh
+	@echo ""
+	@echo "Next: make k8s-deploy-registry"
+
+# Simple cluster without registry (for quick testing)
 kind-create:
-	kind create cluster --name $(KIND_CLUSTER)
+	kind create cluster --name $(KIND_CLUSTER) --config docker/scripts/local/kind-config.yaml
+	@echo "Installing nginx ingress controller..."
+	kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
+	kubectl wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=120s || true
 	@echo "Kind cluster '$(KIND_CLUSTER)' created successfully"
+	@echo ""
+	@echo "Next: make k8s-deploy"
 
 kind-delete:
 	kind delete cluster --name $(KIND_CLUSTER)
+	@docker rm -f kind-registry 2>/dev/null || true
 
 kind-load-all: $(addprefix kind-load-,$(SERVICES))
 	@echo "All images loaded to kind cluster '$(KIND_CLUSTER)'"
@@ -132,55 +155,85 @@ kind-load-frontend:
 # Kubernetes - Local (Kustomize + Kind)
 # =============================================================================
 
-k8s-apply-local: kind-load-all
-	kubectl apply -k infrastructure/overlays/local
-	kubectl apply -k services/user-service/k8s/overlays/local
-	kubectl apply -k services/auth-service/k8s/overlays/local
-	kubectl apply -k services/board-service/k8s/overlays/local
-	kubectl apply -k services/chat-service/k8s/overlays/local
-	kubectl apply -k services/noti-service/k8s/overlays/local
-	kubectl apply -k services/storage-service/k8s/overlays/local
-	kubectl apply -k services/video-service/k8s/overlays/local
-	kubectl apply -k services/frontend/k8s/overlays/local
+# -----------------------------------------------------------------------------
+# Method 1: kind load (Simple, fast - no registry needed)
+# -----------------------------------------------------------------------------
+k8s-deploy: build-all kind-load-all k8s-apply
+	@echo ""
+	@echo "✅ Deployment complete!"
+	@echo "   Check status: make status"
+	@echo "   Add to /etc/hosts: 127.0.0.1 wealist.local"
 
-k8s-delete-local:
-	kubectl delete -k services/frontend/k8s/overlays/local --ignore-not-found
-	kubectl delete -k services/video-service/k8s/overlays/local --ignore-not-found
-	kubectl delete -k services/storage-service/k8s/overlays/local --ignore-not-found
-	kubectl delete -k services/noti-service/k8s/overlays/local --ignore-not-found
-	kubectl delete -k services/chat-service/k8s/overlays/local --ignore-not-found
-	kubectl delete -k services/board-service/k8s/overlays/local --ignore-not-found
-	kubectl delete -k services/auth-service/k8s/overlays/local --ignore-not-found
-	kubectl delete -k services/user-service/k8s/overlays/local --ignore-not-found
-	kubectl delete -k infrastructure/overlays/local --ignore-not-found
+# -----------------------------------------------------------------------------
+# Method 2: Local Registry (Docker Hub rate limit bypass)
+# Requires: make kind-setup first
+# -----------------------------------------------------------------------------
+k8s-deploy-registry: build-registry k8s-apply-registry
+	@echo ""
+	@echo "✅ Deployment complete!"
+	@echo "   Check status: make status"
+	@echo "   Add to /etc/hosts: 127.0.0.1 wealist.local"
+
+# Build and push to local registry
+build-registry:
+	@echo "Building and pushing to local registry ($(LOCAL_REGISTRY))..."
+	./docker/scripts/local/2.build_services_and_load.sh
+
+# Apply manifests (registry mode uses different kustomization)
+k8s-apply-registry:
+	kubectl apply -k k8s/overlays/develop
+	kubectl apply -k infrastructure/overlays/develop
+	kubectl apply -k k8s/overlays/develop-registry/all-services
+
+# -----------------------------------------------------------------------------
+# Method 3: Docker Hub (Push to public/private Docker Hub registry)
+# Requires: DOCKER_HUB_ID environment variable
+# -----------------------------------------------------------------------------
+k8s-deploy-dockerhub: build-dockerhub k8s-apply-dockerhub
+	@echo ""
+	@echo "Deployment complete!"
+	@echo "   Check status: make status"
+	@echo "   Add to /etc/hosts: 127.0.0.1 wealist.local"
+
+# Build and push to Docker Hub
+build-dockerhub:
+	@if [ -z "$(DOCKER_HUB_ID)" ]; then \
+		echo "Error: DOCKER_HUB_ID is required"; \
+		echo "Usage: DOCKER_HUB_ID=your-id make k8s-deploy-dockerhub"; \
+		exit 1; \
+	fi
+	DOCKER_HUB_ID=$(DOCKER_HUB_ID) IMAGE_TAG=$(or $(IMAGE_TAG),latest) ./docker/scripts/docker-hub/build-and-push.sh
+
+# Generate kustomization and apply (Docker Hub mode)
+k8s-apply-dockerhub:
+	@if [ -z "$(DOCKER_HUB_ID)" ]; then \
+		echo "Error: DOCKER_HUB_ID is required"; \
+		echo "Usage: DOCKER_HUB_ID=your-id make k8s-apply-dockerhub"; \
+		exit 1; \
+	fi
+	DOCKER_HUB_ID=$(DOCKER_HUB_ID) IMAGE_TAG=$(or $(IMAGE_TAG),latest) ./docker/scripts/docker-hub/generate-kustomization.sh
+	kubectl apply -k k8s/overlays/develop
+	kubectl apply -k infrastructure/overlays/develop
+	kubectl apply -k k8s/overlays/develop-dockerhub/all-services
+
+# -----------------------------------------------------------------------------
+# Manual apply/delete
+# -----------------------------------------------------------------------------
+k8s-apply:
+	@echo "Applying all k8s manifests..."
+	kubectl apply -k k8s/overlays/develop/all-services
+
+k8s-delete:
+	kubectl delete -k k8s/overlays/develop/all-services --ignore-not-found
+	kubectl delete -k infrastructure/overlays/develop --ignore-not-found
+	kubectl delete -k k8s/overlays/develop --ignore-not-found
 
 # Preview kustomize output
+kustomize-all:
+	kubectl kustomize k8s/overlays/develop/all-services
+
 kustomize-infra:
-	kubectl kustomize infrastructure/overlays/local
-
-kustomize-user-service:
-	kubectl kustomize services/user-service/k8s/overlays/local
-
-kustomize-auth-service:
-	kubectl kustomize services/auth-service/k8s/overlays/local
-
-kustomize-board-service:
-	kubectl kustomize services/board-service/k8s/overlays/local
-
-kustomize-chat-service:
-	kubectl kustomize services/chat-service/k8s/overlays/local
-
-kustomize-noti-service:
-	kubectl kustomize services/noti-service/k8s/overlays/local
-
-kustomize-storage-service:
-	kubectl kustomize services/storage-service/k8s/overlays/local
-
-kustomize-video-service:
-	kubectl kustomize services/video-service/k8s/overlays/local
-
-kustomize-frontend:
-	kubectl kustomize services/frontend/k8s/overlays/local
+	kubectl kustomize infrastructure/overlays/develop
 
 # =============================================================================
 # Kubernetes - EKS
@@ -226,5 +279,5 @@ status:
 	@echo "=== Docker Containers ==="
 	docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 	@echo ""
-	@echo "=== Kubernetes Pods (wealist-local) ==="
-	kubectl get pods -n wealist-local 2>/dev/null || echo "Namespace not found"
+	@echo "=== Kubernetes Pods (wealist-dev) ==="
+	kubectl get pods -n wealist-dev 2>/dev/null || echo "Namespace not found"

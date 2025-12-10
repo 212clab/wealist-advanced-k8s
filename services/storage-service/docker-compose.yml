@@ -28,7 +28,7 @@ services:
       # Service URLs
       - AUTH_SERVICE_URL=http://host.docker.internal:8080
       # S3/MinIO
-      - S3_BUCKET=wealist-local-files
+      - S3_BUCKET=wealist-dev-files
       - S3_REGION=ap-northeast-2
       - S3_ENDPOINT=http://host.docker.internal:9000
       - S3_PUBLIC_ENDPOINT=http://localhost:9000

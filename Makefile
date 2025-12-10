@@ -112,12 +112,19 @@ kind-setup:
 	@echo ""
 	@echo "Next: make infra-setup"
 
-# Load infrastructure images to local registry (postgres, redis, livekit, coturn)
+# Load infrastructure images to local registry and deploy (postgres, redis, livekit, coturn)
 infra-setup:
 	@echo "Loading infrastructure images to local registry..."
 	./docker/scripts/dev/1.load_infra_images.sh
 	@echo ""
-	@echo "Next: make k8s-deploy-registry"
+	@echo "Deploying infrastructure to Kubernetes..."
+	kubectl apply -k infrastructure/overlays/develop
+	@echo ""
+	@echo "Waiting for infrastructure pods to be ready..."
+	kubectl wait --namespace wealist-dev --for=condition=ready pod --selector=app=postgres --timeout=120s || true
+	kubectl wait --namespace wealist-dev --for=condition=ready pod --selector=app=redis --timeout=120s || true
+	@echo ""
+	@echo "Infrastructure ready! Next: make k8s-deploy-registry"
 
 # Simple cluster without registry (for quick testing)
 kind-create:

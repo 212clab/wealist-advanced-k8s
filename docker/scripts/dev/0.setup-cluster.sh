@@ -49,6 +49,9 @@ nodes:
       - containerPort: 443
         hostPort: 443
         protocol: TCP
+      - containerPort: 30080
+        hostPort: 8080
+        protocol: TCP
   - role: worker
   - role: worker
 EOF
@@ -94,9 +97,6 @@ echo "✅ 클러스터 준비 완료!"
 echo ""
 echo "📦 로컬 레지스트리: localhost:${REG_PORT}"
 echo ""
-echo "다음 단계 (Makefile 사용):"
-echo "  make k8s-deploy-registry   # 서비스 빌드 + 푸시 + 배포"
-echo ""
-echo "또는 수동:"
-echo "  ./docker/scripts/dev/1.load_infra_images.sh   # 인프라 이미지 로드"
-echo "  ./docker/scripts/dev/2.build_services_and_load.sh  # 서비스 빌드 & 푸시"
+echo "다음 단계:"
+echo "  make infra-setup          # 인프라 이미지 로드 + 배포"
+echo "  make k8s-deploy-services  # 서비스 빌드 + 배포"

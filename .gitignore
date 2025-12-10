@@ -109,6 +109,6 @@ terraform/dev/*
 
 
 # secret이라는 이름이 들어간 모든 .yaml 파일 무시
-**/secret*.yaml
+# **/secret*.yaml
 # key라는 이름이 들어간 모든 .yaml 파일 무시
-**/key*.yaml
+# **/key*.yaml

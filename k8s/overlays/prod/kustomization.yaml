@@ -16,11 +16,13 @@ kind: Kustomization
 namespace: wealist-prod
 
 resources:
-  - ../../base/namespace/namespace.yaml
+  - ../../base/namespace-prod
   - ../../base/shared
 
-commonLabels:
-  app.kubernetes.io/env: production
+labels:
+  - pairs:
+      app.kubernetes.io/env: production
+    includeSelectors: false
 
 # ConfigMap 값 오버라이드
 patches:

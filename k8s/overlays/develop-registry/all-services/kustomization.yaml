@@ -9,11 +9,12 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
-  # Base develop overlay (namespace, shared config, ingress)
-  - ..
-
-  # Infrastructure
+  # Infrastructure (includes namespace)
   - ../../../../infrastructure/overlays/develop
+
+  # Shared config & ingress
+  - ../../../base/shared
+  - ingress.yaml
 
   # Backend Services (base only, we override images here)
   - ../../../../services/auth-service/k8s/base
@@ -58,6 +59,8 @@ images:
 namespace: wealist-dev
 
 # Common labels
-commonLabels:
-  app.kubernetes.io/env: develop
-  app.kubernetes.io/registry: local
+labels:
+  - pairs:
+      app.kubernetes.io/env: develop
+      app.kubernetes.io/registry: local
+    includeSelectors: false

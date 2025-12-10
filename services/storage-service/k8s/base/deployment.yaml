@@ -24,16 +24,13 @@ spec:
             - containerPort: 8003
               protocol: TCP
           envFrom:
-            # Shared config (loaded first, can be overridden by service-specific)
             - configMapRef:
                 name: wealist-shared-config
             - secretRef:
                 name: wealist-shared-secrets
-            # Service-specific config (overrides shared)
-            - configMapRef:
-                name: storage-service-config
-            - secretRef:
-                name: storage-service-secret
+          env:
+            - name: DATABASE_URL
+              value: "postgresql://storage_service:storage_service_password@postgres:5432/wealist_storage_db?sslmode=disable"
           resources:
             requests:
               memory: "128Mi"

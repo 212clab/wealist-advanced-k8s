@@ -20,16 +20,17 @@ spec:
           ports:
             - containerPort: 8080
           envFrom:
-            # Shared config (loaded first, can be overridden by service-specific)
             - configMapRef:
                 name: wealist-shared-config
             - secretRef:
                 name: wealist-shared-secrets
-            # Service-specific config (overrides shared)
-            - configMapRef:
-                name: auth-service-config
-            - secretRef:
-                name: auth-service-secret
+          env:
+            - name: AUTH_SERVICE_PORT
+              value: "8080"
+            - name: SPRING_REDIS_HOST
+              value: "redis"
+            - name: SPRING_REDIS_PORT
+              value: "6379"
           livenessProbe:
             httpGet:
               path: /health

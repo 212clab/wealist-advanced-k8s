@@ -20,16 +20,13 @@ spec:
           ports:
             - containerPort: 8000
           envFrom:
-            # Shared config (loaded first, can be overridden by service-specific)
             - configMapRef:
                 name: wealist-shared-config
             - secretRef:
                 name: wealist-shared-secrets
-            # Service-specific config (overrides shared)
-            - configMapRef:
-                name: board-service-config
-            - secretRef:
-                name: board-service-secret
+          env:
+            - name: DATABASE_URL
+              value: "postgresql://board_service:board_service_password@postgres:5432/wealist_board_db?sslmode=disable"
           livenessProbe:
             httpGet:
               path: /health/live

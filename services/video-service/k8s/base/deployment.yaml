@@ -24,16 +24,13 @@ spec:
             - containerPort: 8004
               protocol: TCP
           envFrom:
-            # Shared config (loaded first, can be overridden by service-specific)
             - configMapRef:
                 name: wealist-shared-config
             - secretRef:
                 name: wealist-shared-secrets
-            # Service-specific config (overrides shared)
-            - configMapRef:
-                name: video-service-config
-            - secretRef:
-                name: video-service-secret
+          env:
+            - name: DATABASE_URL
+              value: "postgresql://video_service:video_service_password@postgres:5432/wealist_video_db?sslmode=disable"
           resources:
             requests:
               memory: "128Mi"

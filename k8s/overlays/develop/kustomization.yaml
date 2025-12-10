@@ -14,12 +14,14 @@ kind: Kustomization
 namespace: wealist-dev
 
 resources:
-  - ../../base/namespace/namespace.yaml
+  - ../../base/namespace-dev
   - ../../base/shared
   - ingress.yaml
 
-commonLabels:
-  app.kubernetes.io/env: develop
+labels:
+  - pairs:
+      app.kubernetes.io/env: develop
+    includeSelectors: false
 
 # ConfigMap 값 오버라이드
 patches:

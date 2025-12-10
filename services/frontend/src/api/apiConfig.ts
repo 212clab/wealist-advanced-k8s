@@ -1,7 +1,18 @@
 import axios, { AxiosError, AxiosInstance, InternalAxiosRequestConfig } from 'axios';
 
-// 환경 변수 가져오기
-const INJECTED_API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+// Runtime config type declaration (injected via config.js)
+declare global {
+  interface Window {
+    __ENV__?: {
+      API_BASE_URL?: string;
+    };
+  }
+}
+
+// 환경 변수 가져오기 (우선순위: runtime config > build-time env)
+// - K8s: window.__ENV__ (ConfigMap에서 주입)
+// - local: import.meta.env.VITE_API_BASE_URL (빌드 타임)
+const INJECTED_API_BASE_URL = window.__ENV__?.API_BASE_URL || import.meta.env.VITE_API_BASE_URL;
 
 // ============================================================================
 // 💡 [핵심 수정]: Context Path를 환경에 따라 조건부로 붙입니다.

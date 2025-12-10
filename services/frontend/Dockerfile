@@ -1,22 +1,56 @@
-# frontend/Dockerfile (프로덕션용, 자동 빌드 보장)
+# frontend/Dockerfile
+# Multi-stage build for local development and production
+#
+# Usage:
+#   Development (docker-compose): docker build --target development -t frontend:dev .
+#   Production: docker build -t frontend:prod .
+#
+# Environments:
+#   - local: docker-compose (development stage)
+#   - develop: Kind local K8s (production stage + ConfigMap)
+#   - prod: EKS (production stage + ConfigMap)
 
-FROM node:20-alpine AS builder
+# === Base Stage ===
+FROM node:20-alpine AS base
+WORKDIR /app
+ENV NPM_CONFIG_LOGLEVEL=warn
+RUN npm install -g pnpm
+
+# === Development Stage ===
+# For local development with hot reload (docker-compose)
+FROM base AS development
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
+# Source code is mounted via docker-compose volumes
+# CMD is overridden in docker-compose.yml
+
+# === Builder Stage ===
+# Builds the production bundle
+FROM base AS builder
 WORKDIR /app
 
-# 빌드 타임 환경변수 (VITE_* 변수는 빌드 시점에 주입됨)
-# 기본값: localhost (로컬 K8s용)
-# 프로덕션: docker build --build-arg VITE_API_BASE_URL=https://api.wealist.co.kr
+# Build-time environment variable (fallback, can be overridden by runtime config)
 ARG VITE_API_BASE_URL=http://localhost
 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
 
-RUN npm install -g pnpm
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 COPY . .
-# 빌드 실패 시 컨테이너 중단
 RUN pnpm run build || (echo "Build failed. Check Vite config or env vars." && exit 1)
 
-FROM nginx:stable-alpine
-EXPOSE 80
+# === Production Stage ===
+# Serves static files with nginx
+FROM nginx:stable-alpine AS production
+
+# Copy built assets
 COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Copy nginx config if exists
+# COPY docker/nginx.conf /etc/nginx/nginx.conf
+
+# Create config.js placeholder for runtime injection (K8s ConfigMap)
+# This file will be overwritten by ConfigMap mount in K8s
+RUN echo 'window.__ENV__ = { API_BASE_URL: "http://localhost" };' > /usr/share/nginx/html/config.js
+
+EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]

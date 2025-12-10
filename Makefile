@@ -1,4 +1,5 @@
-.PHONY: help dev-up dev-down dev-logs build-all build-% deploy-local deploy-eks clean
+.PHONY: help dev-up dev-down dev-logs build-all build-% deploy-local deploy-eks clean \
+        k8s-deploy k8s-deploy-registry k8s-deploy-dockerhub build-dockerhub k8s-apply-dockerhub
 
 # Kind cluster name (default: wealist)
 KIND_CLUSTER ?= wealist
@@ -30,6 +31,9 @@ help:
 	@echo ""
 	@echo "    [Method 2: Local Registry - Docker Hub limit bypass]"
 	@echo "    make k8s-deploy-registry - Build + push to registry + deploy all"
+	@echo ""
+	@echo "    [Method 3: Docker Hub - Push to Docker Hub]"
+	@echo "    DOCKER_HUB_ID=<id> make k8s-deploy-dockerhub - Build + push + deploy"
 	@echo ""
 	@echo "    [Manual]"
 	@echo "    make k8s-apply          - Apply manifests only (images must exist)"
@@ -180,6 +184,37 @@ k8s-apply-registry:
 	kubectl apply -k k8s/overlays/develop
 	kubectl apply -k infrastructure/overlays/develop
 	kubectl apply -k k8s/overlays/develop-registry/all-services
+
+# -----------------------------------------------------------------------------
+# Method 3: Docker Hub (Push to public/private Docker Hub registry)
+# Requires: DOCKER_HUB_ID environment variable
+# -----------------------------------------------------------------------------
+k8s-deploy-dockerhub: build-dockerhub k8s-apply-dockerhub
+	@echo ""
+	@echo "Deployment complete!"
+	@echo "   Check status: make status"
+	@echo "   Add to /etc/hosts: 127.0.0.1 wealist.local"
+
+# Build and push to Docker Hub
+build-dockerhub:
+	@if [ -z "$(DOCKER_HUB_ID)" ]; then \
+		echo "Error: DOCKER_HUB_ID is required"; \
+		echo "Usage: DOCKER_HUB_ID=your-id make k8s-deploy-dockerhub"; \
+		exit 1; \
+	fi
+	DOCKER_HUB_ID=$(DOCKER_HUB_ID) IMAGE_TAG=$(or $(IMAGE_TAG),latest) ./docker/scripts/docker-hub/build-and-push.sh
+
+# Generate kustomization and apply (Docker Hub mode)
+k8s-apply-dockerhub:
+	@if [ -z "$(DOCKER_HUB_ID)" ]; then \
+		echo "Error: DOCKER_HUB_ID is required"; \
+		echo "Usage: DOCKER_HUB_ID=your-id make k8s-apply-dockerhub"; \
+		exit 1; \
+	fi
+	DOCKER_HUB_ID=$(DOCKER_HUB_ID) IMAGE_TAG=$(or $(IMAGE_TAG),latest) ./docker/scripts/docker-hub/generate-kustomization.sh
+	kubectl apply -k k8s/overlays/develop
+	kubectl apply -k infrastructure/overlays/develop
+	kubectl apply -k k8s/overlays/develop-dockerhub/all-services
 
 # -----------------------------------------------------------------------------
 # Manual apply/delete

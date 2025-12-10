@@ -20,6 +20,10 @@ spec:
           ports:
             - containerPort: 80
           envFrom:
+            # Shared config (for API URLs - used in config.js)
+            - configMapRef:
+                name: wealist-shared-config
+            # Service-specific config
             - configMapRef:
                 name: frontend-config
           livenessProbe:

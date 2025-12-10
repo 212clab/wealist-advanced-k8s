@@ -4,6 +4,9 @@ kind: Kustomization
 namespace: wealist-dev
 
 resources:
+  # Shared resources (ConfigMap, Secret for all services)
+  - ../../../../../k8s/base/shared
+  # Service-specific resources
   - ../../base
 
 images:

@@ -20,6 +20,12 @@ spec:
           ports:
             - containerPort: 8001
           envFrom:
+            # Shared config (loaded first, can be overridden by service-specific)
+            - configMapRef:
+                name: wealist-shared-config
+            - secretRef:
+                name: wealist-shared-secrets
+            # Service-specific config (overrides shared)
             - configMapRef:
                 name: chat-service-config
             - secretRef:

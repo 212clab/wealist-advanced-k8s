@@ -9,6 +9,7 @@ import (
 	"chat-service/internal/websocket"
 
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/redis/go-redis/v9"
 	// swaggerFiles "github.com/swaggo/files"
 	// ginSwagger "github.com/swaggo/gin-swagger"
@@ -24,10 +25,12 @@ func Setup(cfg *config.Config, db *gorm.DB, redisClient *redis.Client, logger *z
 	}
 
 	r := gin.New()
-	r.Use(gin.Recovery())
-	r.Use(middleware.LoggerMiddleware(logger))
-	r.Use(commonmw.DefaultCORS()) // CORS from common package
-	r.Use(middleware.MetricsMiddleware()) // Prometheus metrics
+
+	// Middleware (using common package)
+	r.Use(commonmw.Recovery(logger))
+	r.Use(commonmw.Logger(logger))
+	r.Use(commonmw.DefaultCORS())
+	r.Use(commonmw.Metrics())
 
 	// Initialize repositories
 	chatRepo := repository.NewChatRepository(db)
@@ -53,7 +56,7 @@ func Setup(cfg *config.Config, db *gorm.DB, redisClient *redis.Client, logger *z
 	// Health endpoints (no auth)
 	r.GET("/health", healthHandler.Health)
 	r.GET("/ready", healthHandler.Ready)
-	r.GET("/metrics", middleware.MetricsHandler()) // Prometheus metrics
+	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	// Swagger documentation (disabled for faster builds)
 	// r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

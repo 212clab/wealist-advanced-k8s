@@ -39,12 +39,11 @@ func Setup(cfg Config) *gin.Engine {
 	// Create Gin router
 	router := gin.New()
 
-	// Apply global middleware chain
+	// Apply global middleware chain (using common package)
 	router.Use(
-		middleware.Recovery(cfg.Logger), // 1. Panic recovery
-		middleware.RequestID(),          // 2. Request ID tracking
-		middleware.Logger(cfg.Logger),   // 3. Request logging
-		commonmw.DefaultCORS(),          // 4. CORS configuration (from common package)
+		commonmw.Recovery(cfg.Logger), // 1. Panic recovery
+		commonmw.Logger(cfg.Logger),   // 2. Request logging (includes request ID)
+		commonmw.DefaultCORS(),        // 3. CORS configuration
 	)
 
 	// Add metrics middleware if metrics is configured

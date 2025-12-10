@@ -2,6 +2,7 @@ package router
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	// swaggerFiles "github.com/swaggo/files"
 	// ginSwagger "github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
@@ -29,14 +30,14 @@ type Config struct {
 func Setup(cfg Config) *gin.Engine {
 	r := gin.New()
 
-	// Middleware
-	r.Use(gin.Recovery())
-	r.Use(middleware.Logger(cfg.Logger))
-	r.Use(commonmw.CORSWithOrigins("*")) // Using common middleware
-	r.Use(middleware.Metrics())          // Prometheus metrics middleware
+	// Middleware (using common package)
+	r.Use(commonmw.Recovery(cfg.Logger))
+	r.Use(commonmw.Logger(cfg.Logger))
+	r.Use(commonmw.CORSWithOrigins("*"))
+	r.Use(commonmw.Metrics())
 
 	// Prometheus metrics endpoint
-	r.GET("/metrics", middleware.MetricsHandler())
+	r.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	// Health check routes
 	r.GET("/health", func(c *gin.Context) {

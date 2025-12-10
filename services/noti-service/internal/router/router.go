@@ -24,9 +24,11 @@ func Setup(cfg *config.Config, db *gorm.DB, redisClient *redis.Client, logger *z
 	}
 
 	r := gin.New()
-	r.Use(gin.Recovery())
-	r.Use(middleware.LoggerMiddleware(logger))
-	r.Use(commonmw.DefaultCORS()) // CORS from common package
+
+	// Middleware (using common package)
+	r.Use(commonmw.Recovery(logger))
+	r.Use(commonmw.Logger(logger))
+	r.Use(commonmw.DefaultCORS())
 
 	// Initialize services
 	notificationRepo := repository.NewNotificationRepository(db)

@@ -24,9 +24,6 @@ spec:
                 name: wealist-shared-config
             - secretRef:
                 name: wealist-shared-secrets
-          env:
-            - name: DATABASE_URL
-              value: "postgresql://auth_service:auth_service_password@postgres:5432/wealist_auth_db?sslmode=disable"
           livenessProbe:
             httpGet:
               path: /health

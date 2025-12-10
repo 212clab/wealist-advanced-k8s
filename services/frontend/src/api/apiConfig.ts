@@ -18,9 +18,9 @@ const getApiBaseUrl = (path: string): string => {
       // auth-service: refresh 호출이 '/refresh'만 사용하므로 context path 포함
       if (path?.includes('/api/auth')) return `${INJECTED_API_BASE_URL}:8080/api/auth`; // auth-service
       // user-service: 요청이 full path 사용 (/api/users/*, /api/workspaces/*, /api/profiles/*)
-      if (path?.includes('/api/users')) return `${INJECTED_API_BASE_URL}:8090`; // user-service
-      if (path?.includes('/api/workspaces')) return `${INJECTED_API_BASE_URL}:8090`; // user-service (workspaces)
-      if (path?.includes('/api/profiles')) return `${INJECTED_API_BASE_URL}:8090`; // user-service (profiles)
+      if (path?.includes('/api/users')) return `${INJECTED_API_BASE_URL}:8081`; // user-service
+      if (path?.includes('/api/workspaces')) return `${INJECTED_API_BASE_URL}:8081`; // user-service (workspaces)
+      if (path?.includes('/api/profiles')) return `${INJECTED_API_BASE_URL}:8081`; // user-service (profiles)
       if (path?.includes('/api/boards')) return `${INJECTED_API_BASE_URL}:8000/api`;
       if (path?.includes('/api/chats')) return `${INJECTED_API_BASE_URL}:8001${path}`;
       if (path?.includes('/api/notifications')) return `${INJECTED_API_BASE_URL}:8002`;

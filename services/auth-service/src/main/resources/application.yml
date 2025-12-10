@@ -48,7 +48,7 @@ springdoc:
     disable-swagger-default-url: true
 
 server:
-  port: ${AUTH_SERVICE_PORT:8090}
+  port: ${AUTH_SERVICE_PORT:8080}
   error:
     whitelabel.enabled: false
     include-exception: true
@@ -66,7 +66,7 @@ oauth2:
 
 # User Service URL (유저 조회/생성용)
 user-service:
-  url: ${USER_SERVICE_URL:http://localhost:8080}
+  url: ${USER_SERVICE_URL:http://localhost:8081}
 
 logging:
   level:

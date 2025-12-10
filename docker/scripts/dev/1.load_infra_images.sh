@@ -1,6 +1,7 @@
 #!/bin/bash
 # 인프라 이미지를 로컬 레지스트리에 푸시
-# Docker Hub 로그인 필요: docker login
+# postgres/redis: AWS ECR Public (무료, rate limit 없음)
+# coturn/livekit: Docker Hub
 
 set -e
 
@@ -22,8 +23,11 @@ load() {
     docker push "${LOCAL_REG}/${name}:${tag}"
 }
 
-load "postgres:15-alpine" "postgres" "15-alpine"
-load "redis:7-alpine" "redis" "7-alpine"
+# AWS ECR Public (무료)
+load "public.ecr.aws/docker/library/postgres:15-alpine" "postgres" "15-alpine"
+load "public.ecr.aws/docker/library/redis:7-alpine" "redis" "7-alpine"
+
+# Docker Hub (유료 계정)
 load "coturn/coturn:4.6" "coturn" "4.6"
 load "livekit/livekit-server:v1.5" "livekit" "v1.5"
 

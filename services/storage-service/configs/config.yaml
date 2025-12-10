@@ -32,7 +32,7 @@ cors:
   allowed_origins: "*"
 
 s3:
-  bucket: "wealist-local-files"
+  bucket: "wealist-dev-files"
   region: "ap-northeast-2"
   access_key: "minioadmin"
   secret_key: "minioadmin"

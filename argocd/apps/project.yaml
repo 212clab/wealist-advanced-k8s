@@ -8,7 +8,7 @@ spec:
   sourceRepos:
     - "*"
   destinations:
-    - namespace: wealist-local
+    - namespace: wealist-dev
       server: https://kubernetes.default.svc
     - namespace: wealist-prod
       server: https://kubernetes.default.svc

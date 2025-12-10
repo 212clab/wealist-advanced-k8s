@@ -18,10 +18,10 @@ postgres-data/
 redis-data/
 minio-data/
 
-# File uploads (local development)
-uploads/
-storage/
-files/
+# File uploads (local development - root level only)
+/uploads/
+/storage/
+/files/
 
 # Java / Gradle
 .gradle

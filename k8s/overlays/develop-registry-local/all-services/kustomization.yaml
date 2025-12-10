@@ -68,8 +68,9 @@ labels:
       app.kubernetes.io/domain: local.wealist.co.kr
     includeSelectors: false
 
-# Patch auth-service config for local.wealist.co.kr domain
+# Patches for local.wealist.co.kr domain
 patches:
+  # Auth service: OAuth2 redirect URLs
   - target:
       kind: ConfigMap
       name: auth-service-config
@@ -80,3 +81,30 @@ patches:
       - op: replace
         path: /data/OAUTH2_CLIENT_REDIRECT_URI
         value: "http://local.wealist.co.kr/login/oauth2/code/google"
+
+  # Board service: Add SERVER_BASE_PATH for ingress routing
+  - target:
+      kind: ConfigMap
+      name: board-service-config
+    patch: |-
+      - op: add
+        path: /data/SERVER_BASE_PATH
+        value: "/api/boards"
+
+  # Chat service: Add SERVER_BASE_PATH for ingress routing
+  - target:
+      kind: ConfigMap
+      name: chat-service-config
+    patch: |-
+      - op: add
+        path: /data/SERVER_BASE_PATH
+        value: "/api/chats"
+
+  # User service: Add SERVER_BASE_PATH for ingress routing
+  - target:
+      kind: ConfigMap
+      name: user-service-config
+    patch: |-
+      - op: add
+        path: /data/SERVER_BASE_PATH
+        value: "/api"

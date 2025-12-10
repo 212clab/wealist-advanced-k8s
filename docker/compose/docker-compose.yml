@@ -144,8 +144,6 @@ services:
     depends_on:
       redis:
         condition: service_healthy
-      user-service:
-        condition: service_healthy
 
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/health"]
@@ -220,11 +218,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      auth-service:
-        condition: service_healthy
       minio:
-        condition: service_healthy
-      noti-service:
         condition: service_healthy
 
     healthcheck:
@@ -285,8 +279,6 @@ services:
       postgres:
         condition: service_healthy
       redis:
-        condition: service_healthy
-      auth-service:
         condition: service_healthy
 
     healthcheck:
@@ -354,8 +346,6 @@ services:
       postgres:
         condition: service_healthy
       redis:
-        condition: service_healthy
-      auth-service:
         condition: service_healthy
 
     healthcheck:
@@ -429,8 +419,6 @@ services:
 
     depends_on:
       postgres:
-        condition: service_healthy
-      auth-service:
         condition: service_healthy
       minio:
         condition: service_healthy
@@ -512,8 +500,6 @@ services:
       postgres:
         condition: service_healthy
       redis:
-        condition: service_healthy
-      auth-service:
         condition: service_healthy
       livekit:
         condition: service_started
@@ -626,9 +612,6 @@ services:
     networks:
       - frontend-net
       - backend-net
-
-    depends_on:
-      - nginx
 
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:5173/"]

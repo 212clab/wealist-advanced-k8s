@@ -353,9 +353,9 @@ export const getChatWebSocketUrl = (chatId: string, token: string): string => {
     return `${protocol}//${window.location.host}/svc/chat/api/chats/ws/${chatId}?token=${encodedToken}`;
   }
 
-  // Docker-compose (로컬 개발)
+  // Docker-compose (로컬 개발) - nginx를 통해 WebSocket 프록시
   if (INJECTED_API_BASE_URL?.includes('localhost')) {
-    return `ws://localhost:8001/api/chats/ws/${chatId}?token=${encodedToken}`;
+    return `ws://localhost/api/chats/ws/${chatId}?token=${encodedToken}`;
   }
 
   // 운영 환경 (ALB 라우팅)
@@ -368,7 +368,7 @@ export const getChatWebSocketUrl = (chatId: string, token: string): string => {
   // Fallback
   const host = window.location.host;
   if (host.includes('localhost') || host.includes('127.0.0.1')) {
-    return `ws://localhost:8001/api/chats/ws/${chatId}?token=${encodedToken}`;
+    return `ws://localhost/api/chats/ws/${chatId}?token=${encodedToken}`;
   }
 
   return `wss://api.wealist.co.kr/api/chats/ws/${chatId}?token=${encodedToken}`;
@@ -387,9 +387,9 @@ export const getPresenceWebSocketUrl = (token: string): string => {
     return `${protocol}//${window.location.host}/svc/chat/api/chats/ws/presence?token=${encodedToken}`;
   }
 
-  // Docker-compose (로컬 개발)
+  // Docker-compose (로컬 개발) - nginx를 통해 WebSocket 프록시
   if (INJECTED_API_BASE_URL?.includes('localhost')) {
-    return `ws://localhost:8001/api/chats/ws/presence?token=${encodedToken}`;
+    return `ws://localhost/api/chats/ws/presence?token=${encodedToken}`;
   }
 
   // 운영 환경 (ALB 라우팅)
@@ -402,7 +402,7 @@ export const getPresenceWebSocketUrl = (token: string): string => {
   // Fallback
   const host = window.location.host;
   if (host.includes('localhost') || host.includes('127.0.0.1')) {
-    return `ws://localhost:8001/api/chats/ws/presence?token=${encodedToken}`;
+    return `ws://localhost/api/chats/ws/presence?token=${encodedToken}`;
   }
 
   return `wss://api.wealist.co.kr/api/chats/ws/presence?token=${encodedToken}`;
@@ -422,9 +422,9 @@ export const getBoardWebSocketUrl = (projectId: string, token: string): string =
     return `${protocol}//${window.location.host}/svc/board/api/boards/ws/project/${projectId}?token=${encodedToken}`;
   }
 
-  // Docker-compose (로컬 개발)
+  // Docker-compose (로컬 개발) - nginx를 통해 WebSocket 프록시
   if (INJECTED_API_BASE_URL?.includes('localhost')) {
-    return `ws://localhost:8000/api/boards/ws/project/${projectId}?token=${encodedToken}`;
+    return `ws://localhost/api/boards/ws/project/${projectId}?token=${encodedToken}`;
   }
 
   // 운영 환경 (ALB 라우팅)
@@ -437,7 +437,7 @@ export const getBoardWebSocketUrl = (projectId: string, token: string): string =
   // Fallback
   const host = window.location.host;
   if (host.includes('localhost') || host.includes('127.0.0.1')) {
-    return `ws://localhost:8000/api/boards/ws/project/${projectId}?token=${encodedToken}`;
+    return `ws://localhost/api/boards/ws/project/${projectId}?token=${encodedToken}`;
   }
 
   return `wss://api.wealist.co.kr/api/boards/ws/project/${projectId}?token=${encodedToken}`;
@@ -456,9 +456,9 @@ export const getNotificationSSEUrl = (token?: string): string => {
     return `${window.location.origin}/svc/noti/api/notifications/stream?token=${encodedToken}`;
   }
 
-  // Docker-compose (로컬 개발)
+  // Docker-compose (로컬 개발) - nginx를 통해 SSE 프록시
   if (INJECTED_API_BASE_URL?.includes('localhost')) {
-    return `http://localhost:8002/api/notifications/stream?token=${encodedToken}`;
+    return `http://localhost/api/notifications/stream?token=${encodedToken}`;
   }
 
   // 운영 환경 또는 Fallback

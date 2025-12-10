@@ -8,18 +8,18 @@
 
 => k8s/base/shared/secret-shared.yaml, services/auth-service/k8s/base/secret.yaml 에 google_client 관련 설정해주세요!
 
-make kind-setup (cluster 생성 + nginx controller 셋팅)
+# 1. 클러스터 생성 (동일)
 
-make infra-setup (인프라 이미지 로드 + 배포 + 대기)
--> kubectl get pods -n wealist-dev 로 확인하세요
+make kind-setup
 
-make k8s-deploy-services (빌드 + ns 생성 + 배포)
--> kubectl get pods -n wealist-dev 로 확인하세요
-make status
+# 2. 이미지 빌드/로드 (동일)
 
-## 포트포워딩 대신 로컬에 등록해서 wealist.local로
+make kind-load-images
 
-echo "127.0.0.1 wealist.local" | sudo tee -a /etc/hosts
+# 3. 배포 (도메인 선택)
+
+make kind-apply # localhost 접속용
+make local-kind-apply # local.wealist.co.kr 접속용
 
 ## 그 외
 

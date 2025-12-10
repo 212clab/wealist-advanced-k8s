@@ -1,8 +1,19 @@
-.PHONY: help dev-up dev-down dev-logs kind-setup kind-delete infra-setup k8s-deploy-services status clean
+.PHONY: help dev-up dev-down dev-logs kind-setup kind-load-images kind-apply kind-delete status clean
+.PHONY: local-kind-apply local-tls-secret
+.PHONY: auth-service-build auth-service-load auth-service-redeploy auth-service-all
+.PHONY: board-service-build board-service-load board-service-redeploy board-service-all
+.PHONY: chat-service-build chat-service-load chat-service-redeploy chat-service-all
+.PHONY: frontend-build frontend-load frontend-redeploy frontend-all
+.PHONY: noti-service-build noti-service-load noti-service-redeploy noti-service-all
+.PHONY: storage-service-build storage-service-load storage-service-redeploy storage-service-all
+.PHONY: user-service-build user-service-load user-service-redeploy user-service-all
+.PHONY: video-service-build video-service-load video-service-redeploy video-service-all
 
 # Kind cluster name
 KIND_CLUSTER ?= wealist
 LOCAL_REGISTRY ?= localhost:5001
+K8S_NAMESPACE ?= wealist-dev
+IMAGE_TAG ?= latest
 
 help:
 	@echo "Wealist Project"
@@ -12,11 +23,25 @@ help:
 	@echo "    make dev-down     - Stop all services"
 	@echo "    make dev-logs     - View logs"
 	@echo ""
-	@echo "  Kubernetes (Local):"
-	@echo "    make kind-setup         - 1. Create cluster + registry"
-	@echo "    make infra-setup        - 2. Load infra images + deploy"
-	@echo "    make k8s-deploy-services - 3. Build + deploy services"
-	@echo "    make kind-delete        - Delete cluster"
+	@echo "  Kubernetes (Local - localhost) - 3 Step Setup:"
+	@echo "    make kind-setup       - 1. Create cluster + registry"
+	@echo "    make kind-load-images - 2. Build/pull all images (infra + services)"
+	@echo "    make kind-apply       - 3. Deploy all to k8s (localhost)"
+	@echo "    make kind-delete      - Delete cluster"
+	@echo ""
+	@echo "  Kubernetes (Local - local.wealist.co.kr):"
+	@echo "    make local-kind-apply - Deploy with local.wealist.co.kr domain"
+	@echo "    (Uses same cluster/images as kind-*, only ingress host differs)"
+	@echo ""
+	@echo "  Per-Service Commands:"
+	@echo "    make <service>-build    - Build image only"
+	@echo "    make <service>-load     - Build + push to registry"
+	@echo "    make <service>-redeploy - Rollout restart in k8s"
+	@echo "    make <service>-all      - Build + load + redeploy"
+	@echo ""
+	@echo "  Available services:"
+	@echo "    auth-service, board-service, chat-service, frontend,"
+	@echo "    noti-service, storage-service, user-service, video-service"
 	@echo ""
 	@echo "  Utility:"
 	@echo "    make status       - Show pods status"
@@ -39,35 +64,210 @@ dev-logs:
 # Kubernetes (Local - Kind)
 # =============================================================================
 
+# Step 1: Create cluster + registry only
 kind-setup:
-	@echo "Setting up Kind cluster with local registry..."
+	@echo "=== Step 1: Creating Kind cluster with local registry ==="
 	./docker/scripts/dev/0.setup-cluster.sh
+	@echo ""
+	@echo "✅ Cluster ready! Next: make kind-load-images"
+
+# Step 2: Build/pull all images (infra + services)
+kind-load-images:
+	@echo "=== Step 2: Loading all images ==="
+	@echo ""
+	@echo "--- Loading infrastructure images ---"
+	./docker/scripts/dev/1.load_infra_images.sh
+	@echo ""
+	@echo "--- Building service images ---"
+	./docker/scripts/dev/2.build_services_and_load.sh
+	@echo ""
+	@echo "✅ All images loaded!"
+	@echo ""
+	@echo "Next step (choose one):"
+	@echo "  make kind-apply       - Deploy (localhost)"
+	@echo "  make local-kind-apply - Deploy (local.wealist.co.kr)"
+
+# Step 3: Deploy all to k8s
+kind-apply:
+	@echo "=== Step 3: Deploying to Kubernetes ==="
+	@echo ""
+	@echo "--- Deploying infrastructure ---"
+	kubectl apply -k infrastructure/overlays/develop
+	@echo ""
+	@echo "Waiting for infra pods..."
+	kubectl wait --namespace $(K8S_NAMESPACE) --for=condition=ready pod --selector=app=postgres --timeout=120s || true
+	kubectl wait --namespace $(K8S_NAMESPACE) --for=condition=ready pod --selector=app=redis --timeout=120s || true
+	@echo ""
+	@echo "--- Deploying services ---"
+	kubectl apply -k k8s/overlays/develop-registry/all-services
+	@echo ""
+	@echo "✅ Done! Check: make status"
 
 kind-delete:
 	kind delete cluster --name $(KIND_CLUSTER)
 	@docker rm -f kind-registry 2>/dev/null || true
 
-infra-setup:
-	@echo "Loading infrastructure images..."
-	./docker/scripts/dev/1.load_infra_images.sh
+# =============================================================================
+# Kubernetes (Local - local.wealist.co.kr)
+# =============================================================================
+# Uses same cluster and images as kind-* commands
+# Only difference: ingress uses host: local.wealist.co.kr with TLS
+
+local-tls-secret:
+	@echo "=== Creating TLS secret for local.wealist.co.kr ==="
+	@if kubectl get secret local-wealist-tls -n $(K8S_NAMESPACE) >/dev/null 2>&1; then \
+		echo "TLS secret already exists, skipping..."; \
+	else \
+		echo "Generating self-signed certificate..."; \
+		openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+			-keyout /tmp/local-wealist-tls.key \
+			-out /tmp/local-wealist-tls.crt \
+			-subj "/CN=local.wealist.co.kr/O=wealist" \
+			-addext "subjectAltName=DNS:local.wealist.co.kr"; \
+		kubectl create secret tls local-wealist-tls \
+			--cert=/tmp/local-wealist-tls.crt \
+			--key=/tmp/local-wealist-tls.key \
+			-n $(K8S_NAMESPACE); \
+		rm -f /tmp/local-wealist-tls.key /tmp/local-wealist-tls.crt; \
+		echo "✅ TLS secret created"; \
+	fi
+
+local-kind-apply: local-tls-secret
+	@echo "=== Deploying to Kubernetes (local.wealist.co.kr) ==="
 	@echo ""
-	@echo "Deploying infrastructure..."
+	@echo "--- Deploying infrastructure ---"
 	kubectl apply -k infrastructure/overlays/develop
 	@echo ""
-	@echo "Waiting for pods..."
-	kubectl wait --namespace wealist-dev --for=condition=ready pod --selector=app=postgres --timeout=120s || true
-	kubectl wait --namespace wealist-dev --for=condition=ready pod --selector=app=redis --timeout=120s || true
+	@echo "Waiting for infra pods..."
+	kubectl wait --namespace $(K8S_NAMESPACE) --for=condition=ready pod --selector=app=postgres --timeout=120s || true
+	kubectl wait --namespace $(K8S_NAMESPACE) --for=condition=ready pod --selector=app=redis --timeout=120s || true
 	@echo ""
-	@echo "Done! Next: make k8s-deploy-services"
+	@echo "--- Deploying services (local.wealist.co.kr) ---"
+	kubectl apply -k k8s/overlays/develop-registry-local/all-services
+	@echo ""
+	@echo "✅ Done! Access: https://local.wealist.co.kr"
+	@echo "(Self-signed cert - browser will show warning, click 'Advanced' → 'Proceed')"
+	@echo "Check: make status"
 
-k8s-deploy-services:
-	@echo "Building services..."
-	./docker/scripts/dev/2.build_services_and_load.sh
-	@echo ""
-	@echo "Deploying services..."
-	kubectl apply -k k8s/overlays/develop-registry/all-services
-	@echo ""
-	@echo "✅ Done! Check: make status"
+# =============================================================================
+# Per-Service Commands
+# =============================================================================
+
+# Service definitions: name|path|dockerfile|k8s-deployment-name
+define build-service
+	@echo "Building $(1)..."
+	docker build -t $(LOCAL_REGISTRY)/$(1):$(IMAGE_TAG) -f $(2)/$(3) $(2)
+	@echo "✅ Built $(LOCAL_REGISTRY)/$(1):$(IMAGE_TAG)"
+endef
+
+define load-service
+	@echo "Building and pushing $(1) to registry..."
+	docker build -t $(LOCAL_REGISTRY)/$(1):$(IMAGE_TAG) -f $(2)/$(3) $(2)
+	docker push $(LOCAL_REGISTRY)/$(1):$(IMAGE_TAG)
+	@echo "✅ Pushed $(LOCAL_REGISTRY)/$(1):$(IMAGE_TAG)"
+endef
+
+define redeploy-service
+	@echo "Redeploying $(1)..."
+	kubectl rollout restart deployment/$(1) -n $(K8S_NAMESPACE)
+	@echo "✅ Rollout restart triggered for $(1)"
+endef
+
+# --- auth-service ---
+auth-service-build:
+	$(call build-service,auth-service,services/auth-service,Dockerfile)
+
+auth-service-load:
+	$(call load-service,auth-service,services/auth-service,Dockerfile)
+
+auth-service-redeploy:
+	$(call redeploy-service,auth-service)
+
+auth-service-all: auth-service-load auth-service-redeploy
+
+# --- board-service ---
+board-service-build:
+	$(call build-service,board-service,services/board-service,docker/Dockerfile)
+
+board-service-load:
+	$(call load-service,board-service,services/board-service,docker/Dockerfile)
+
+board-service-redeploy:
+	$(call redeploy-service,board-service)
+
+board-service-all: board-service-load board-service-redeploy
+
+# --- chat-service ---
+chat-service-build:
+	$(call build-service,chat-service,services/chat-service,docker/Dockerfile)
+
+chat-service-load:
+	$(call load-service,chat-service,services/chat-service,docker/Dockerfile)
+
+chat-service-redeploy:
+	$(call redeploy-service,chat-service)
+
+chat-service-all: chat-service-load chat-service-redeploy
+
+# --- frontend ---
+frontend-build:
+	$(call build-service,frontend,services/frontend,Dockerfile)
+
+frontend-load:
+	$(call load-service,frontend,services/frontend,Dockerfile)
+
+frontend-redeploy:
+	$(call redeploy-service,frontend)
+
+frontend-all: frontend-load frontend-redeploy
+
+# --- noti-service ---
+noti-service-build:
+	$(call build-service,noti-service,services/noti-service,docker/Dockerfile)
+
+noti-service-load:
+	$(call load-service,noti-service,services/noti-service,docker/Dockerfile)
+
+noti-service-redeploy:
+	$(call redeploy-service,noti-service)
+
+noti-service-all: noti-service-load noti-service-redeploy
+
+# --- storage-service ---
+storage-service-build:
+	$(call build-service,storage-service,services/storage-service,docker/Dockerfile)
+
+storage-service-load:
+	$(call load-service,storage-service,services/storage-service,docker/Dockerfile)
+
+storage-service-redeploy:
+	$(call redeploy-service,storage-service)
+
+storage-service-all: storage-service-load storage-service-redeploy
+
+# --- user-service ---
+user-service-build:
+	$(call build-service,user-service,services/user-service,docker/Dockerfile)
+
+user-service-load:
+	$(call load-service,user-service,services/user-service,docker/Dockerfile)
+
+user-service-redeploy:
+	$(call redeploy-service,user-service)
+
+user-service-all: user-service-load user-service-redeploy
+
+# --- video-service ---
+video-service-build:
+	$(call build-service,video-service,services/video-service,docker/Dockerfile)
+
+video-service-load:
+	$(call load-service,video-service,services/video-service,docker/Dockerfile)
+
+video-service-redeploy:
+	$(call redeploy-service,video-service)
+
+video-service-all: video-service-load video-service-redeploy
 
 # =============================================================================
 # Utility

@@ -179,10 +179,8 @@ build-registry:
 	@echo "Building and pushing to local registry ($(LOCAL_REGISTRY))..."
 	./docker/scripts/dev/2.build_services_and_load.sh
 
-# Apply manifests (registry mode uses different kustomization)
+# Apply manifests (registry mode - all-in-one)
 k8s-apply-registry:
-	kubectl apply -k k8s/overlays/develop
-	kubectl apply -k infrastructure/overlays/develop
 	kubectl apply -k k8s/overlays/develop-registry/all-services
 
 # -----------------------------------------------------------------------------

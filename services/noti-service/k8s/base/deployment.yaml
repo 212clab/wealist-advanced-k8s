@@ -20,16 +20,10 @@ spec:
           ports:
             - containerPort: 8002
           envFrom:
-            # Shared config (loaded first, can be overridden by service-specific)
             - configMapRef:
                 name: wealist-shared-config
             - secretRef:
                 name: wealist-shared-secrets
-            # Service-specific config (overrides shared)
-            - configMapRef:
-                name: noti-service-config
-            - secretRef:
-                name: noti-service-secret
           livenessProbe:
             httpGet:
               path: /health

@@ -24,16 +24,10 @@ spec:
             - containerPort: 8003
               protocol: TCP
           envFrom:
-            # Shared config (loaded first, can be overridden by service-specific)
             - configMapRef:
                 name: wealist-shared-config
             - secretRef:
                 name: wealist-shared-secrets
-            # Service-specific config (overrides shared)
-            - configMapRef:
-                name: storage-service-config
-            - secretRef:
-                name: storage-service-secret
           resources:
             requests:
               memory: "128Mi"

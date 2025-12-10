@@ -8,9 +8,9 @@ docker/env/*
 !docker/env/*.example
 
 # Kubernetes Secrets (use *.example files as templates)
-**/k8s/**/secret.yaml
-**/k8s/**/secret-*.yaml
-infrastructure/**/secret.yaml
+# **/k8s/**/secret.yaml
+# **/k8s/**/secret-*.yaml
+# infrastructure/**/secret.yaml
 !**/*.example
 
 # Docker

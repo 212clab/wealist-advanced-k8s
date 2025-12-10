@@ -1,6 +1,6 @@
 module project-board-api
 
-go 1.24
+go 1.24.0
 
 require (
 	github.com/OrangesCloud/wealist-advanced-go-pkg v0.3.0

@@ -30,7 +30,7 @@ services:
       # Service URLs
       - USER_SERVICE_URL=http://host.docker.internal:8081
       - AUTH_SERVICE_URL=http://host.docker.internal:8080
-      - NOTI_SERVICE_URL=http://host.docker.internal:8084
+      - NOTI_SERVICE_URL=http://host.docker.internal:8002
       - INTERNAL_API_KEY=internal-secret-key
       # S3/MinIO
       - S3_BUCKET=wealist-local-files

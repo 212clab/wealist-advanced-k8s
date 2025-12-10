@@ -33,11 +33,11 @@ const getIngressServicePrefix = (path: string): string => {
   if (path?.includes('/api/users')) return '/svc/user';
   if (path?.includes('/api/workspaces')) return '/svc/user';
   if (path?.includes('/api/profiles')) return '/svc/user';
-  if (path?.includes('/api/boards')) return '/svc/board';
+  if (path?.includes('/api/boards')) return '/svc/board/api';
   if (path?.includes('/api/chats')) return '/svc/chat';
   if (path?.includes('/api/notifications')) return '/svc/noti';
-  if (path?.includes('/api/storage')) return '/svc/storage';
-  if (path?.includes('/api/video')) return '/svc/video';
+  if (path?.includes('/api/storage')) return '/svc/storage/api';
+  if (path?.includes('/api/video')) return '/svc/video/api';
   return ''; // 매칭 안 되면 prefix 없이
 };
 

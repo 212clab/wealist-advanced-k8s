@@ -106,13 +106,13 @@ build-frontend:
 # Full setup with local registry (recommended - bypasses Docker Hub limits)
 kind-setup:
 	@echo "Setting up Kind cluster with local registry..."
-	./docker/scripts/local/0.setup-cluster.sh
+	./docker/scripts/dev/0.setup-cluster.sh
 	@echo ""
 	@echo "Next: make k8s-deploy-registry"
 
 # Simple cluster without registry (for quick testing)
 kind-create:
-	kind create cluster --name $(KIND_CLUSTER) --config docker/scripts/local/kind-config.yaml
+	kind create cluster --name $(KIND_CLUSTER) --config docker/scripts/dev/kind-config.yaml
 	@echo "Installing nginx ingress controller..."
 	kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
 	kubectl wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller --timeout=120s || true
@@ -177,7 +177,7 @@ k8s-deploy-registry: build-registry k8s-apply-registry
 # Build and push to local registry
 build-registry:
 	@echo "Building and pushing to local registry ($(LOCAL_REGISTRY))..."
-	./docker/scripts/local/2.build_services_and_load.sh
+	./docker/scripts/dev/2.build_services_and_load.sh
 
 # Apply manifests (registry mode uses different kustomization)
 k8s-apply-registry:

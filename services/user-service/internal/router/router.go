@@ -7,7 +7,7 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
-	commonmw "github.com/wealist/common/middleware"
+	commonmw "github.com/OrangesCloud/wealist-advanced-go-pkg/middleware"
 	"user-service/internal/client"
 	"user-service/internal/handler"
 	"user-service/internal/middleware"

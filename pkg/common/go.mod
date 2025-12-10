@@ -1,4 +1,4 @@
-module github.com/wealist/common
+module github.com/OrangesCloud/wealist-advanced-go-pkg
 
 go 1.24
 

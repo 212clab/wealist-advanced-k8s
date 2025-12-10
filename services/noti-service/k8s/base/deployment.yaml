@@ -18,7 +18,7 @@ spec:
         - name: noti-service
           image: noti-service:latest
           ports:
-            - containerPort: 8084
+            - containerPort: 8002
           envFrom:
             - configMapRef:
                 name: noti-service-config
@@ -27,13 +27,13 @@ spec:
           livenessProbe:
             httpGet:
               path: /health
-              port: 8084
+              port: 8002
             initialDelaySeconds: 30
             periodSeconds: 10
           readinessProbe:
             httpGet:
               path: /ready
-              port: 8084
+              port: 8002
             initialDelaySeconds: 5
             periodSeconds: 5
           resources:

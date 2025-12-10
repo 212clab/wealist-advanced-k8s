@@ -1,6 +1,36 @@
 import axios from 'axios';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost';
+// Runtime config type declaration (injected via config.js)
+declare global {
+  interface Window {
+    __ENV__?: {
+      API_BASE_URL?: string;
+    };
+  }
+}
+
+// K8s ingress 모드 감지: 명시적으로 빈 문자열이 설정된 경우
+const isIngressMode = window.__ENV__?.API_BASE_URL === '';
+
+// API Base URL 결정
+const getApiBase = (): string => {
+  // 1. K8s ingress 모드: /svc/video prefix 사용
+  if (isIngressMode) {
+    return '/svc/video';
+  }
+
+  // 2. 환경 변수 확인
+  const BASE_URL = window.__ENV__?.API_BASE_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost';
+
+  // 3. 로컬 개발 환경
+  if (BASE_URL === 'http://localhost' || BASE_URL.includes('127.0.0.1')) {
+    return `${BASE_URL}:8004`;
+  }
+
+  return BASE_URL;
+};
+
+const API_BASE = getApiBase();
 
 export interface VideoRoom {
   id: string;

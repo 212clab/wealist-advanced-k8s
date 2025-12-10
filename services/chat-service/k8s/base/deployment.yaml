@@ -18,7 +18,7 @@ spec:
         - name: chat-service
           image: chat-service
           ports:
-            - containerPort: 8083
+            - containerPort: 8001
           envFrom:
             - configMapRef:
                 name: chat-service-config
@@ -27,13 +27,13 @@ spec:
           livenessProbe:
             httpGet:
               path: /health
-              port: 8083
+              port: 8001
             initialDelaySeconds: 10
             periodSeconds: 10
           readinessProbe:
             httpGet:
               path: /ready
-              port: 8083
+              port: 8001
             initialDelaySeconds: 5
             periodSeconds: 5
           resources:

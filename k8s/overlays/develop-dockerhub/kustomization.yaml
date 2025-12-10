@@ -16,7 +16,7 @@ kind: Kustomization
 namespace: wealist-dev
 
 resources:
-  - ../../base/namespace
+  - ../../base/namespace/namespace-dev.yaml
   - ../../base/shared
   - ../develop/ingress.yaml
 

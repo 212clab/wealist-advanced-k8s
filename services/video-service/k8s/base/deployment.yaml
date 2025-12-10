@@ -28,6 +28,9 @@ spec:
                 name: wealist-shared-config
             - secretRef:
                 name: wealist-shared-secrets
+          env:
+            - name: DATABASE_URL
+              value: "postgresql://video_service:video_service_password@postgres:5432/wealist_video_db?sslmode=disable"
           resources:
             requests:
               memory: "128Mi"

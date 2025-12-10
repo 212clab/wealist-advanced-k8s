@@ -28,6 +28,9 @@ spec:
                 name: wealist-shared-config
             - secretRef:
                 name: wealist-shared-secrets
+          env:
+            - name: DATABASE_URL
+              value: "postgresql://storage_service:storage_service_password@postgres:5432/wealist_storage_db?sslmode=disable"
           resources:
             requests:
               memory: "128Mi"

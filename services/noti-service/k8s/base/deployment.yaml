@@ -24,6 +24,9 @@ spec:
                 name: wealist-shared-config
             - secretRef:
                 name: wealist-shared-secrets
+          env:
+            - name: DATABASE_URL
+              value: "postgresql://noti_service:noti_service_password@postgres:5432/wealist_noti_db?sslmode=disable"
           livenessProbe:
             httpGet:
               path: /health

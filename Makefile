@@ -1,4 +1,5 @@
 .PHONY: help dev-up dev-down dev-logs kind-setup kind-load-images kind-apply kind-delete status clean
+.PHONY: local-kind-apply
 .PHONY: auth-service-build auth-service-load auth-service-redeploy auth-service-all
 .PHONY: board-service-build board-service-load board-service-redeploy board-service-all
 .PHONY: chat-service-build chat-service-load chat-service-redeploy chat-service-all
@@ -22,11 +23,15 @@ help:
 	@echo "    make dev-down     - Stop all services"
 	@echo "    make dev-logs     - View logs"
 	@echo ""
-	@echo "  Kubernetes (Local) - 3 Step Setup:"
+	@echo "  Kubernetes (Local - localhost) - 3 Step Setup:"
 	@echo "    make kind-setup       - 1. Create cluster + registry"
 	@echo "    make kind-load-images - 2. Build/pull all images (infra + services)"
-	@echo "    make kind-apply       - 3. Deploy all to k8s"
+	@echo "    make kind-apply       - 3. Deploy all to k8s (localhost)"
 	@echo "    make kind-delete      - Delete cluster"
+	@echo ""
+	@echo "  Kubernetes (Local - local.wealist.co.kr):"
+	@echo "    make local-kind-apply - Deploy with local.wealist.co.kr domain"
+	@echo "    (Uses same cluster/images as kind-*, only ingress host differs)"
 	@echo ""
 	@echo "  Per-Service Commands:"
 	@echo "    make <service>-build    - Build image only"
@@ -97,6 +102,28 @@ kind-apply:
 kind-delete:
 	kind delete cluster --name $(KIND_CLUSTER)
 	@docker rm -f kind-registry 2>/dev/null || true
+
+# =============================================================================
+# Kubernetes (Local - local.wealist.co.kr)
+# =============================================================================
+# Uses same cluster and images as kind-* commands
+# Only difference: ingress uses host: local.wealist.co.kr
+
+local-kind-apply:
+	@echo "=== Deploying to Kubernetes (local.wealist.co.kr) ==="
+	@echo ""
+	@echo "--- Deploying infrastructure ---"
+	kubectl apply -k infrastructure/overlays/develop
+	@echo ""
+	@echo "Waiting for infra pods..."
+	kubectl wait --namespace $(K8S_NAMESPACE) --for=condition=ready pod --selector=app=postgres --timeout=120s || true
+	kubectl wait --namespace $(K8S_NAMESPACE) --for=condition=ready pod --selector=app=redis --timeout=120s || true
+	@echo ""
+	@echo "--- Deploying services (local.wealist.co.kr) ---"
+	kubectl apply -k k8s/overlays/develop-registry-local/all-services
+	@echo ""
+	@echo "✅ Done! Access: http://local.wealist.co.kr"
+	@echo "Check: make status"
 
 # =============================================================================
 # Per-Service Commands

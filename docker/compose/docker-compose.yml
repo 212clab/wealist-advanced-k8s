@@ -94,8 +94,6 @@ services:
     build:
       context: ../../services/auth-service
       dockerfile: Dockerfile
-      args:
-        CACHEBUST: ${CACHEBUST:-1}
     image: wealist/auth-service:${VERSION:-latest}
     container_name: wealist-auth-service
     hostname: auth-service

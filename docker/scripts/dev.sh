@@ -41,6 +41,10 @@ fi
 # Docker Compose 파일 경로
 COMPOSE_FILES="-f docker/compose/docker-compose.yml"
 
+# BuildKit 활성화 (cache mount 사용을 위해 필수)
+export DOCKER_BUILDKIT=1
+export COMPOSE_DOCKER_CLI_BUILD=1
+
 # 환경변수 파일을 명시적으로 지정 (compose 파일 내 변수 치환용)
 ENV_FILE_OPTION="--env-file $ENV_FILE"
 

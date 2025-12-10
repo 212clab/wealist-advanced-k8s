@@ -1,22 +1,21 @@
+# syntax=docker/dockerfile:1.4
 # Build stage
 FROM gradle:8-jdk21 AS builder
 WORKDIR /home/gradle/src
-
-# 캐시 무효화를 위한 ARG 추가
-ARG CACHEBUST=1
 
 # Use Gradle Wrapper for consistent builds
 # Copy wrapper files
 COPY --chown=gradle:gradle gradlew build.gradle settings.gradle ./
 COPY --chown=gradle:gradle gradle ./gradle
 
-# Download dependencies to a separate layer for caching
-RUN ./gradlew dependencies --no-daemon
+# Download dependencies with cache mount (dramatically speeds up rebuilds)
+RUN --mount=type=cache,target=/home/gradle/.gradle \
+    ./gradlew dependencies --no-daemon
 
 # Copy source code and build the application
 COPY --chown=gradle:gradle src ./src
-RUN echo "Cache bust: ${CACHEBUST}"
-RUN ./gradlew bootJar --no-daemon
+RUN --mount=type=cache,target=/home/gradle/.gradle \
+    ./gradlew bootJar --no-daemon
 
 # Runtime stage
 FROM eclipse-temurin:21-jre-jammy as final

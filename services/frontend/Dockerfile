@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.4
 # frontend/Dockerfile
 # Multi-stage build for local development and production
 #
@@ -20,7 +21,8 @@ RUN npm install -g pnpm
 # For local development with hot reload (docker-compose)
 FROM base AS development
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile
 # Source code is mounted via docker-compose volumes
 # CMD is overridden in docker-compose.yml
 
@@ -34,7 +36,8 @@ ARG VITE_API_BASE_URL=http://localhost
 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
 
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile
 COPY . .
 RUN pnpm run build || (echo "Build failed. Check Vite config or env vars." && exit 1)
 

@@ -19,28 +19,31 @@ if ! curl -s "http://${LOCAL_REG}/v2/" > /dev/null 2>&1; then
     exit 1
 fi
 
-# 이미지 매핑 (source|target)
-IMAGES="postgres:15-alpine|${LOCAL_REG}/postgres:15-alpine
-redis:7-alpine|${LOCAL_REG}/redis:7-alpine
-coturn/coturn:4.6|${LOCAL_REG}/coturn:4.6
-livekit/livekit-server:v1.5|${LOCAL_REG}/livekit:v1.5"
+# 이미지 목록 (source:target_name:tag)
+load_image() {
+    local src="$1"
+    local target_name="$2"
+    local tag="$3"
+    local dst="${LOCAL_REG}/${target_name}:${tag}"
 
-echo "Step 1: Docker Hub에서 이미지 Pull"
-echo "$IMAGES" | while IFS='|' read -r src dst; do
-    echo "  Pulling: $src"
-    docker pull --platform linux/amd64 "$src" || echo "  WARNING: Failed to pull $src"
-done
-
-echo ""
-echo "Step 2: 로컬 레지스트리로 Tag & Push"
-echo "$IMAGES" | while IFS='|' read -r src dst; do
-    echo "  $src → $dst"
+    echo "Processing: $src → $dst"
+    echo "  Pulling..."
+    docker pull --platform linux/amd64 "$src"
+    echo "  Tagging..."
     docker tag "$src" "$dst"
+    echo "  Pushing..."
     docker push "$dst"
-done
+    echo "  Done!"
+    echo ""
+}
 
-echo ""
+# 각 이미지 처리
+load_image "postgres:15-alpine" "postgres" "15-alpine"
+load_image "redis:7-alpine" "redis" "7-alpine"
+load_image "coturn/coturn:4.6" "coturn" "4.6"
+load_image "livekit/livekit-server:v1.5" "livekit" "v1.5"
+
 echo "=== 완료! ==="
 echo ""
 echo "로컬 레지스트리 이미지 확인:"
-echo "  curl -s http://${LOCAL_REG}/v2/_catalog"
+curl -s "http://${LOCAL_REG}/v2/_catalog" | python3 -m json.tool 2>/dev/null || curl -s "http://${LOCAL_REG}/v2/_catalog"

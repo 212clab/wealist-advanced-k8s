@@ -34,9 +34,9 @@ COPY --from=builder --chown=spring:spring /home/gradle/src/build/libs/*.jar app.
 # liveness: Redis 연결과 무관하게 서비스 자체 상태만 체크 (EKS에서 pod 생존 보장)
 # readiness는 /actuator/health/readiness로 별도 확인 가능
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD wget -q --spider http://localhost:8090/actuator/health/liveness || exit 1
+    CMD wget -q --spider http://localhost:8080/actuator/health/liveness || exit 1
 
-EXPOSE 8090
+EXPOSE 8080
 
 # Run the application
 ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=75.0", "-jar", "app.jar"]

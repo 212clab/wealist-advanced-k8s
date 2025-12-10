@@ -33,7 +33,14 @@ func Setup(cfg Config) *gin.Engine {
 	// Middleware (using common package)
 	r.Use(commonmw.Recovery(cfg.Logger))
 	r.Use(commonmw.Logger(cfg.Logger))
-	r.Use(commonmw.CORSWithOrigins("*"))
+	r.Use(commonmw.CORS(commonmw.CORSConfig{
+		AllowedOrigins:   []string{"*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Request-ID", "X-Workspace-Id"},
+		ExposedHeaders:   []string{"X-Request-ID"},
+		AllowCredentials: true,
+		MaxAge:           86400,
+	}))
 	r.Use(commonmw.Metrics())
 
 	// Prometheus metrics endpoint

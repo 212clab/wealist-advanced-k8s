@@ -16,29 +16,29 @@ import (
 
 // Config holds router configuration
 type Config struct {
-	DB          *gorm.DB
-	Logger      *zap.Logger
-	JWTSecret   string
-	BasePath    string
-	CORSOrigins string
-	S3Client    *client.S3Client
-	AuthClient  *client.AuthClient
+	DB         *gorm.DB
+	Logger     *zap.Logger
+	JWTSecret  string
+	BasePath   string
+	S3Client   *client.S3Client
+	AuthClient *client.AuthClient
 }
 
 // Setup sets up the router with all routes
 func Setup(cfg Config) *gin.Engine {
 	r := gin.New()
 
-	// CORS - use config value, default to "*" if not set
-	corsOrigins := cfg.CORSOrigins
-	if corsOrigins == "" {
-		corsOrigins = "*"
-	}
-
 	// Middleware (using common package)
 	r.Use(commonmw.Recovery(cfg.Logger))
 	r.Use(commonmw.Logger(cfg.Logger))
-	r.Use(commonmw.CORSWithOrigins(corsOrigins))
+	r.Use(commonmw.CORS(commonmw.CORSConfig{
+		AllowedOrigins:   []string{"*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Request-ID", "X-Workspace-Id"},
+		ExposedHeaders:   []string{"X-Request-ID"},
+		AllowCredentials: true,
+		MaxAge:           86400,
+	}))
 	r.Use(commonmw.Metrics())
 
 	// Prometheus metrics endpoint

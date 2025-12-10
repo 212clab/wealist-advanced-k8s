@@ -115,13 +115,12 @@ func main() {
 
 	// Setup router
 	r := router.Setup(router.Config{
-		DB:          db,
-		Logger:      logger,
-		JWTSecret:   cfg.JWT.Secret,
-		BasePath:    cfg.Server.BasePath,
-		CORSOrigins: cfg.CORS.AllowedOrigins,
-		S3Client:    s3Client,
-		AuthClient:  authClient,
+		DB:         db,
+		Logger:     logger,
+		JWTSecret:  cfg.JWT.Secret,
+		BasePath:   cfg.Server.BasePath,
+		S3Client:   s3Client,
+		AuthClient: authClient,
 	})
 
 	// Create HTTP server

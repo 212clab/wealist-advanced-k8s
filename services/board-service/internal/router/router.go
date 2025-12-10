@@ -43,7 +43,14 @@ func Setup(cfg Config) *gin.Engine {
 	router.Use(
 		commonmw.Recovery(cfg.Logger), // 1. Panic recovery
 		commonmw.Logger(cfg.Logger),   // 2. Request logging (includes request ID)
-		commonmw.DefaultCORS(),        // 3. CORS configuration
+		commonmw.CORS(commonmw.CORSConfig{ // 3. CORS configuration with X-Workspace-Id
+			AllowedOrigins:   []string{"*"},
+			AllowedMethods:   []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+			AllowedHeaders:   []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Request-ID", "X-Workspace-Id"},
+			ExposedHeaders:   []string{"X-Request-ID"},
+			AllowCredentials: true,
+			MaxAge:           86400,
+		}),
 	)
 
 	// Add metrics middleware if metrics is configured

@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.4
 # Build stage
 FROM golang:1.24-alpine AS builder
 
@@ -9,14 +10,17 @@ WORKDIR /app
 # Copy go mod files first (for layer caching)
 COPY go.mod go.sum ./
 
-# Download dependencies (this layer is cached if go.mod/go.sum don't change)
-RUN go mod download
+# Download dependencies with cache mount
+RUN --mount=type=cache,target=/go/pkg/mod \
+    go mod download
 
 # Copy source code
 COPY . .
 
-# Build binary with readonly mode (faster, uses cached modules)
-RUN CGO_ENABLED=0 GOOS=linux go build -mod=readonly -ldflags="-w -s" -o /video-service ./cmd/api/main.go
+# Build with cache mount (dramatically speeds up incremental builds)
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o /video-service ./cmd/api/main.go
 
 # Runtime stage
 FROM alpine:3.19

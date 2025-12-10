@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.4
 # Builder stage
 FROM golang:1.24-bookworm AS builder
 
@@ -10,14 +11,17 @@ WORKDIR /app
 # Copy go mod files first (for layer caching)
 COPY go.mod go.sum ./
 
-# Download dependencies (this layer is cached if go.mod/go.sum don't change)
-RUN go mod download
+# Download dependencies with cache mount
+RUN --mount=type=cache,target=/go/pkg/mod \
+    go mod download
 
 # Copy source code
 COPY . .
 
-# Build the application with readonly mode (faster, uses cached modules)
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -mod=readonly -ldflags="-w -s" -o noti-api ./cmd/api
+# Build with cache mount (dramatically speeds up incremental builds)
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o noti-api ./cmd/api
 
 # Runtime stage
 FROM alpine:latest

@@ -604,6 +604,7 @@ services:
     build:
       context: ../../services/frontend
       dockerfile: Dockerfile
+      target: development
     image: wealist/frontend:${VERSION:-latest}
     container_name: wealist-frontend
     hostname: frontend

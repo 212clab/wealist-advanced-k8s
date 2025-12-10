@@ -123,10 +123,9 @@ func Setup(cfg Config) *gin.Engine {
 	// Setup API routes
 	setupRoutes(baseGroup, cfg.JWTSecret, projectHandler, boardHandler, participantHandler, commentHandler, fieldOptionHandler, projectMemberHandler, projectJoinRequestHandler, attachmentHandler)
 
-	// 🔥 [중요] WebSocket은 baseGroup을 사용하되 인증 미들웨어 없이 직접 등록
-	// basePath가 /api/boards일 때: /api/boards/api/ws/project/:projectId
-	wsGroup := baseGroup.Group("/api")
-	wsGroup.GET("/ws/project/:projectId", wsHandler.HandleWebSocket)
+	// 🔥 [중요] WebSocket은 baseGroup에 직접 등록 (chat-service와 동일한 패턴)
+	// basePath가 /api/boards일 때: /api/boards/ws/project/:projectId
+	baseGroup.GET("/ws/project/:projectId", wsHandler.HandleWebSocket)
 
 	return router
 }

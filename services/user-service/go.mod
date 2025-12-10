@@ -3,6 +3,7 @@ module user-service
 go 1.24
 
 require (
+	github.com/wealist/common v0.0.0
 	github.com/aws/aws-sdk-go-v2 v1.40.0
 	github.com/aws/aws-sdk-go-v2/config v1.32.1
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.1
@@ -82,3 +83,6 @@ require (
 	google.golang.org/protobuf v1.34.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
+
+// Use local common package (resolved by go.work)
+replace github.com/wealist/common => ../../pkg/common

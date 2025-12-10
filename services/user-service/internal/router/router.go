@@ -7,6 +7,7 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
+	commonmw "github.com/wealist/common/middleware"
 	"user-service/internal/client"
 	"user-service/internal/handler"
 	"user-service/internal/middleware"
@@ -31,8 +32,8 @@ func Setup(cfg Config) *gin.Engine {
 	// Middleware
 	r.Use(gin.Recovery())
 	r.Use(middleware.Logger(cfg.Logger))
-	r.Use(middleware.CORS("*"))
-	r.Use(middleware.Metrics()) // Prometheus metrics middleware
+	r.Use(commonmw.CORSWithOrigins("*")) // Using common middleware
+	r.Use(middleware.Metrics())          // Prometheus metrics middleware
 
 	// Prometheus metrics endpoint
 	r.GET("/metrics", middleware.MetricsHandler())

@@ -1,8 +1,16 @@
 // src/components/storage/modals/FilePreviewModal.tsx
 
 import React from 'react';
-import { X, Download, ExternalLink, FileText, FileImage, FileVideo, FileAudio, File } from 'lucide-react';
-import { useTheme } from '../../../contexts/ThemeContext';
+import {
+  X,
+  Download,
+  ExternalLink,
+  FileText,
+  FileImage,
+  FileVideo,
+  FileAudio,
+  File,
+} from 'lucide-react';
 import type { StorageFile } from '../../../types/storage';
 import { formatFileSize, getFileCategory } from '../../../types/storage';
 
@@ -17,11 +25,10 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
   onClose,
   onDownload,
 }) => {
-  const { theme } = useTheme();
   const category = getFileCategory(file.extension);
 
   // 미리보기 가능한 파일 유형인지 확인
-  const isPreviewable = file.isImage || category === 'video' || category === 'audio' || file.extension === '.pdf';
+  // const isPreviewable = file.isImage || category === 'video' || category === 'audio' || file.extension === '.pdf';
 
   // 파일 아이콘 가져오기
   const getFileIcon = () => {
@@ -82,11 +89,7 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
     if (file.extension === '.pdf') {
       return (
         <div className="flex-1 bg-gray-100">
-          <iframe
-            src={file.fileUrl}
-            title={file.name}
-            className="w-full h-full border-0"
-          />
+          <iframe src={file.fileUrl} title={file.name} className="w-full h-full border-0" />
         </div>
       );
     }
@@ -113,12 +116,8 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
       {/* 헤더 */}
       <div className="flex items-center justify-between px-6 py-4 bg-black/40">
         <div className="flex items-center gap-4">
-          <h2 className="text-lg font-semibold text-white truncate max-w-md">
-            {file.name}
-          </h2>
-          <span className="text-sm text-gray-400">
-            {formatFileSize(file.fileSize)}
-          </span>
+          <h2 className="text-lg font-semibold text-white truncate max-w-md">{file.name}</h2>
+          <span className="text-sm text-gray-400">{formatFileSize(file.fileSize)}</span>
         </div>
         <div className="flex items-center gap-2">
           {file.fileUrl && (
@@ -157,7 +156,8 @@ export const FilePreviewModal: React.FC<FilePreviewModalProps> = ({
         <span>크기: {formatFileSize(file.fileSize)}</span>
         <span>유형: {file.contentType}</span>
         <span>
-          수정됨: {new Date(file.updatedAt).toLocaleDateString('ko-KR', {
+          수정됨:{' '}
+          {new Date(file.updatedAt).toLocaleDateString('ko-KR', {
             year: 'numeric',
             month: 'long',
             day: 'numeric',

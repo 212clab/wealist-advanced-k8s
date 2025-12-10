@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Link2, Copy, Check, Globe, Users, Trash2, ChevronDown } from 'lucide-react';
 import { useTheme } from '../../../contexts/ThemeContext';
 import type { SelectedItem, PermissionLevel, StorageShare } from '../../../types/storage';
-import { createShare, getSharesByEntity, deleteShare, updateShare } from '../../../api/storageService';
+import { createShare, getSharesByEntity, deleteShare } from '../../../api/storageService';
 import { getWorkspaceMembers } from '../../../api/userService';
 import type { WorkspaceMemberResponse } from '../../../types/user';
 
@@ -72,7 +72,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ item, workspaceId, onClo
       // 공유 목록 새로고침
       const updatedShares = await getSharesByEntity(
         item.type === 'folder' ? 'FOLDER' : 'FILE',
-        item.id
+        item.id,
       );
       setShares(updatedShares);
       setSelectedMembers([]);
@@ -128,9 +128,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ item, workspaceId, onClo
   };
 
   // 공유되지 않은 멤버 필터링
-  const availableMembers = members.filter(
-    (m) => !shares.some((s) => s.sharedWithId === m.userId)
-  );
+  const availableMembers = members.filter((m) => !shares.some((s) => s.sharedWithId === m.userId));
 
   const permissionLabels: Record<PermissionLevel, string> = {
     VIEWER: '뷰어',
@@ -144,10 +142,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ item, workspaceId, onClo
         {/* 헤더 */}
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <h2 className="text-lg font-semibold text-gray-900">"{item.name}" 공유</h2>
-          <button
-            onClick={onClose}
-            className="p-1 rounded-lg hover:bg-gray-100 transition"
-          >
+          <button onClick={onClose} className="p-1 rounded-lg hover:bg-gray-100 transition">
             <X className="w-5 h-5 text-gray-500" />
           </button>
         </div>
@@ -188,17 +183,13 @@ export const ShareModal: React.FC<ShareModalProps> = ({ item, workspaceId, onClo
             <>
               {/* 사용자 추가 */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  사용자 추가
-                </label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">사용자 추가</label>
                 <div className="flex gap-2">
                   <select
                     multiple
                     value={selectedMembers}
                     onChange={(e) =>
-                      setSelectedMembers(
-                        Array.from(e.target.selectedOptions, (opt) => opt.value)
-                      )
+                      setSelectedMembers(Array.from(e.target.selectedOptions, (opt) => opt.value))
                     }
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >

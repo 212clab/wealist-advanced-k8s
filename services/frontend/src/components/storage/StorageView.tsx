@@ -4,7 +4,7 @@ import React, { useCallback, useState, useRef, useEffect } from 'react';
 import {
   Folder,
   FileText,
-  FileImage,
+  // FileImage,
   FileVideo,
   FileAudio,
   FileArchive,
@@ -59,13 +59,13 @@ const getFileIcon = (file: StorageFile, size: 'sm' | 'lg' = 'lg') => {
 
   // Google Drive 색상
   const colors = {
-    doc: '#4285f4',     // Google Docs blue
-    sheet: '#0f9d58',   // Google Sheets green
-    slide: '#f4b400',   // Google Slides yellow
-    image: '#ea4335',   // Red
-    video: '#ea4335',   // Red
-    audio: '#9334ea',   // Purple
-    pdf: '#ea4335',     // Red
+    doc: '#4285f4', // Google Docs blue
+    sheet: '#0f9d58', // Google Sheets green
+    slide: '#f4b400', // Google Slides yellow
+    image: '#ea4335', // Red
+    video: '#ea4335', // Red
+    audio: '#9334ea', // Purple
+    pdf: '#ea4335', // Red
     archive: '#f4b400', // Yellow
     default: '#5f6368', // Gray
   };
@@ -124,7 +124,7 @@ export const StorageView: React.FC<StorageViewProps> = ({
   viewMode,
   folders,
   files,
-  sharedItems,
+  // sharedItems,
   selectedItems,
   onSelectItem,
   onFolderOpen,
@@ -171,21 +171,18 @@ export const StorageView: React.FC<StorageViewProps> = ({
         onSelectItem([item]);
       }
     },
-    [selectedItems, onSelectItem]
+    [selectedItems, onSelectItem],
   );
 
   // 컨텍스트 메뉴 열기
-  const handleContextMenu = useCallback(
-    (e: React.MouseEvent, item: SelectedItem) => {
-      e.preventDefault();
-      setContextMenu({
-        x: e.clientX,
-        y: e.clientY,
-        item,
-      });
-    },
-    []
-  );
+  const handleContextMenu = useCallback((e: React.MouseEvent, item: SelectedItem) => {
+    e.preventDefault();
+    setContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      item,
+    });
+  }, []);
 
   // 더블클릭 핸들러
   const handleDoubleClick = useCallback(
@@ -196,7 +193,7 @@ export const StorageView: React.FC<StorageViewProps> = ({
         onFilePreview(item.data as StorageFile);
       }
     },
-    [onFolderOpen, onFilePreview]
+    [onFolderOpen, onFilePreview],
   );
 
   // 선택 여부 확인
@@ -204,23 +201,26 @@ export const StorageView: React.FC<StorageViewProps> = ({
     (id: string, type: 'file' | 'folder') => {
       return selectedItems.some((s) => s.id === id && s.type === type);
     },
-    [selectedItems]
+    [selectedItems],
   );
 
   // 빈 상태 - Google Drive 스타일
   if (isEmpty) {
-    const emptyMessages: Record<string, { title: string; description: string; icon: React.ReactNode }> = {
+    const emptyMessages: Record<
+      string,
+      { title: string; description: string; icon: React.ReactNode }
+    > = {
       'my-drive': {
         title: '드라이브로 파일을 드래그하거나 "새로 만들기" 버튼을 사용하세요',
         description: '',
         icon: (
           <div className="w-40 h-40 mb-6">
             <svg viewBox="0 0 120 120" className="w-full h-full">
-              <path d="M45 35h30l15 15v45H45V35z" fill="#e8eaed" stroke="#dadce0" strokeWidth="2"/>
-              <path d="M75 35v15h15" fill="none" stroke="#dadce0" strokeWidth="2"/>
-              <rect x="55" y="55" width="20" height="2" fill="#bdc1c6"/>
-              <rect x="55" y="62" width="15" height="2" fill="#bdc1c6"/>
-              <rect x="55" y="69" width="18" height="2" fill="#bdc1c6"/>
+              <path d="M45 35h30l15 15v45H45V35z" fill="#e8eaed" stroke="#dadce0" strokeWidth="2" />
+              <path d="M75 35v15h15" fill="none" stroke="#dadce0" strokeWidth="2" />
+              <rect x="55" y="55" width="20" height="2" fill="#bdc1c6" />
+              <rect x="55" y="62" width="15" height="2" fill="#bdc1c6" />
+              <rect x="55" y="69" width="18" height="2" fill="#bdc1c6" />
             </svg>
           </div>
         ),
@@ -254,7 +254,9 @@ export const StorageView: React.FC<StorageViewProps> = ({
         {emptyState.icon}
         <h3 className="text-base text-[#3c4043] text-center max-w-md">{emptyState.title}</h3>
         {emptyState.description && (
-          <p className="mt-2 text-sm text-[#5f6368] text-center max-w-md">{emptyState.description}</p>
+          <p className="mt-2 text-sm text-[#5f6368] text-center max-w-md">
+            {emptyState.description}
+          </p>
         )}
       </div>
     );

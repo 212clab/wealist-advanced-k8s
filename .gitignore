@@ -94,7 +94,6 @@ frontend/dist/
 frontend/node_modules/
 frontend/.pnp
 frontend/.pnp.js
-frontend/docker-compose.yml
 
 
 

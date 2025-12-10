@@ -224,44 +224,16 @@ k8s-apply:
 	kubectl apply -k k8s/overlays/develop/all-services
 
 k8s-delete:
-	kubectl delete -k services/frontend/k8s/overlays/develop --ignore-not-found
-	kubectl delete -k services/video-service/k8s/overlays/develop --ignore-not-found
-	kubectl delete -k services/storage-service/k8s/overlays/develop --ignore-not-found
-	kubectl delete -k services/noti-service/k8s/overlays/develop --ignore-not-found
-	kubectl delete -k services/chat-service/k8s/overlays/develop --ignore-not-found
-	kubectl delete -k services/board-service/k8s/overlays/develop --ignore-not-found
-	kubectl delete -k services/auth-service/k8s/overlays/develop --ignore-not-found
-	kubectl delete -k services/user-service/k8s/overlays/develop --ignore-not-found
+	kubectl delete -k k8s/overlays/develop/all-services --ignore-not-found
 	kubectl delete -k infrastructure/overlays/develop --ignore-not-found
 	kubectl delete -k k8s/overlays/develop --ignore-not-found
 
 # Preview kustomize output
+kustomize-all:
+	kubectl kustomize k8s/overlays/develop/all-services
+
 kustomize-infra:
 	kubectl kustomize infrastructure/overlays/develop
-
-kustomize-user-service:
-	kubectl kustomize services/user-service/k8s/overlays/develop
-
-kustomize-auth-service:
-	kubectl kustomize services/auth-service/k8s/overlays/develop
-
-kustomize-board-service:
-	kubectl kustomize services/board-service/k8s/overlays/develop
-
-kustomize-chat-service:
-	kubectl kustomize services/chat-service/k8s/overlays/develop
-
-kustomize-noti-service:
-	kubectl kustomize services/noti-service/k8s/overlays/develop
-
-kustomize-storage-service:
-	kubectl kustomize services/storage-service/k8s/overlays/develop
-
-kustomize-video-service:
-	kubectl kustomize services/video-service/k8s/overlays/develop
-
-kustomize-frontend:
-	kubectl kustomize services/frontend/k8s/overlays/develop
 
 # =============================================================================
 # Kubernetes - EKS

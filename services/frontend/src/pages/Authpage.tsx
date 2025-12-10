@@ -63,7 +63,6 @@ const AuthPage: React.FC = () => {
 
   // Google 로그인 핸들러: 리다이렉션만 수행
   const handleGoogleLogin = () => {
-    console.log(OAUTH_BASE);
     setError(null);
     setIsLoading(true);
 

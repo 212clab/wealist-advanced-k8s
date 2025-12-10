@@ -87,13 +87,16 @@ kubectl wait --namespace ingress-nginx \
   --timeout=120s || echo "WARNING: Ingress controller not ready yet"
 
 # 8. 네임스페이스 생성
-kubectl create namespace wealist-local 2>/dev/null || true
+kubectl create namespace wealist-dev 2>/dev/null || true
 
 echo ""
 echo "✅ 클러스터 준비 완료!"
 echo ""
 echo "📦 로컬 레지스트리: localhost:${REG_PORT}"
 echo ""
-echo "다음 단계:"
-echo "  ./1.load_infra_images.sh   # 인프라 이미지 로드"
-echo "  ./2.build_services_and_load.sh  # 서비스 빌드 & 로드"
+echo "다음 단계 (Makefile 사용):"
+echo "  make k8s-deploy-registry   # 서비스 빌드 + 푸시 + 배포"
+echo ""
+echo "또는 수동:"
+echo "  ./docker/scripts/local/1.load_infra_images.sh   # 인프라 이미지 로드"
+echo "  ./docker/scripts/local/2.build_services_and_load.sh  # 서비스 빌드 & 푸시"

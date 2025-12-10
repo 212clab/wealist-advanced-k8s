@@ -7,7 +7,7 @@ set -e
 
 REG_PORT="5001"
 LOCAL_REG="localhost:${REG_PORT}"
-TAG="v1"
+TAG="${IMAGE_TAG:-latest}"  # 환경변수로 오버라이드 가능, 기본값 latest
 
 # 색상 출력
 RED='\033[0;31m'
@@ -100,5 +100,7 @@ echo "로컬 레지스트리 이미지 확인:"
 echo "  curl -s http://${LOCAL_REG}/v2/_catalog"
 echo ""
 echo "배포 명령어:"
-echo "  kubectl apply -k infrastructure/overlays/local"
-echo "  kubectl apply -k services/<service-name>/k8s/overlays/local"
+echo "  make k8s-apply-registry"
+echo ""
+echo "또는 수동:"
+echo "  kubectl apply -k k8s/overlays/develop-registry/all-services"

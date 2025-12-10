@@ -6,20 +6,17 @@ RUN apk add --no-cache git
 
 WORKDIR /app
 
-# Copy go mod files
-COPY go.mod go.sum* ./
+# Copy go mod files first (for layer caching)
+COPY go.mod go.sum ./
 
-# Download dependencies and generate go.sum if missing
-RUN go mod tidy && go mod download
+# Download dependencies (this layer is cached if go.mod/go.sum don't change)
+RUN go mod download
 
 # Copy source code
 COPY . .
 
-# Ensure dependencies are resolved
-RUN go mod tidy
-
-# Build binary
-RUN CGO_ENABLED=0 GOOS=linux go build -o /video-service ./cmd/api/main.go
+# Build binary with readonly mode (faster, uses cached modules)
+RUN CGO_ENABLED=0 GOOS=linux go build -mod=readonly -ldflags="-w -s" -o /video-service ./cmd/api/main.go
 
 # Runtime stage
 FROM alpine:3.19

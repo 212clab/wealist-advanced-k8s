@@ -7,25 +7,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends git ca-certific
 # Set working directory
 WORKDIR /app
 
-# Copy go mod files
-COPY go.mod go.sum* ./
+# Copy go mod files first (for layer caching)
+COPY go.mod go.sum ./
 
-# Copy source code first for go mod tidy
+# Download dependencies (this layer is cached if go.mod/go.sum don't change)
+RUN go mod download
+
+# Copy source code
 COPY . .
 
-# Download dependencies and generate go.sum if missing
-RUN go mod tidy && go mod download
-
-# Swagger generation disabled for faster builds
-# RUN if [ ! -f docs/swagger.json ]; then \
-#         go install github.com/swaggo/swag/cmd/swag@latest && \
-#         swag init -g cmd/api/main.go -o docs --parseDependency --parseInternal; \
-#     else \
-#         echo "Swagger docs already exist, skipping generation"; \
-#     fi
-
-# Build the application
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o chat-api ./cmd/api
+# Build the application with readonly mode (faster, uses cached modules)
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -mod=readonly -ldflags="-w -s" -o chat-api ./cmd/api
 
 # Runtime stage
 FROM alpine:latest

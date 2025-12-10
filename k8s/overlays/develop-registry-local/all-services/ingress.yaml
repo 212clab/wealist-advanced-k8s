@@ -11,8 +11,14 @@ metadata:
     nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
     nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
     nginx.ingress.kubernetes.io/upstream-hash-by: "$request_uri"
+    # SSL/TLS settings
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
 spec:
   ingressClassName: nginx
+  tls:
+    - hosts:
+        - local.wealist.co.kr
+      secretName: local-wealist-tls
   rules:
     - host: local.wealist.co.kr
       http:

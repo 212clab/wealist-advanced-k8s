@@ -1,5 +1,5 @@
 .PHONY: help dev-up dev-down dev-logs kind-setup kind-load-images kind-apply kind-delete status clean
-.PHONY: local-kind-apply
+.PHONY: local-kind-apply local-tls-secret
 .PHONY: auth-service-build auth-service-load auth-service-redeploy auth-service-all
 .PHONY: board-service-build board-service-load board-service-redeploy board-service-all
 .PHONY: chat-service-build chat-service-load chat-service-redeploy chat-service-all
@@ -111,9 +111,28 @@ kind-delete:
 # Kubernetes (Local - local.wealist.co.kr)
 # =============================================================================
 # Uses same cluster and images as kind-* commands
-# Only difference: ingress uses host: local.wealist.co.kr
+# Only difference: ingress uses host: local.wealist.co.kr with TLS
 
-local-kind-apply:
+local-tls-secret:
+	@echo "=== Creating TLS secret for local.wealist.co.kr ==="
+	@if kubectl get secret local-wealist-tls -n $(K8S_NAMESPACE) >/dev/null 2>&1; then \
+		echo "TLS secret already exists, skipping..."; \
+	else \
+		echo "Generating self-signed certificate..."; \
+		openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+			-keyout /tmp/local-wealist-tls.key \
+			-out /tmp/local-wealist-tls.crt \
+			-subj "/CN=local.wealist.co.kr/O=wealist" \
+			-addext "subjectAltName=DNS:local.wealist.co.kr"; \
+		kubectl create secret tls local-wealist-tls \
+			--cert=/tmp/local-wealist-tls.crt \
+			--key=/tmp/local-wealist-tls.key \
+			-n $(K8S_NAMESPACE); \
+		rm -f /tmp/local-wealist-tls.key /tmp/local-wealist-tls.crt; \
+		echo "✅ TLS secret created"; \
+	fi
+
+local-kind-apply: local-tls-secret
 	@echo "=== Deploying to Kubernetes (local.wealist.co.kr) ==="
 	@echo ""
 	@echo "--- Deploying infrastructure ---"
@@ -126,7 +145,8 @@ local-kind-apply:
 	@echo "--- Deploying services (local.wealist.co.kr) ---"
 	kubectl apply -k k8s/overlays/develop-registry-local/all-services
 	@echo ""
-	@echo "✅ Done! Access: http://local.wealist.co.kr"
+	@echo "✅ Done! Access: https://local.wealist.co.kr"
+	@echo "(Self-signed cert - browser will show warning, click 'Advanced' → 'Proceed')"
 	@echo "Check: make status"
 
 # =============================================================================

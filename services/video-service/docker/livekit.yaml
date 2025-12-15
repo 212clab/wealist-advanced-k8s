@@ -1,0 +1,30 @@
+# =============================================================================
+# LiveKit Server Configuration
+# =============================================================================
+# Video Service 독립 실행용 LiveKit 설정입니다.
+# 개발 환경에서 테스트 목적으로 사용됩니다. (TCP only - UDP disabled)
+# =============================================================================
+
+port: 7880
+rtc:
+  # TCP only mode - UDP disabled for local dev
+  tcp_port: 7881
+  port_range_start: 7881
+  port_range_end: 7881
+  use_external_ip: false
+
+keys:
+  devkey: secret
+
+logging:
+  level: info
+  json: false
+
+# TURN server disabled (using TCP only via rtc.tcp_port)
+turn:
+  enabled: false
+
+# Room settings
+room:
+  empty_timeout: 300
+  max_participants: 50

@@ -1,0 +1,207 @@
+# =============================================================================
+# Wealist Helm Chart - Production Values (EKS)
+# =============================================================================
+# Usage: helm install wealist ./charts/wealist -f charts/wealist/values-prod.yaml
+# Or:    helm upgrade wealist ./charts/wealist -f charts/wealist/values-prod.yaml
+#
+# IMPORTANT: Override secrets using --set or external secrets manager
+# Example: helm install wealist ./charts/wealist \
+#   -f charts/wealist/values-prod.yaml \
+#   --set secrets.postgres.password=$DB_PASSWORD
+
+global:
+  environment: prod
+  namespace: wealist-prod
+
+  domain:
+    api: "api.wealist.io"       # Production API domain
+    public: "wealist.io"        # Production public domain
+
+  # AWS ECR registry
+  imageRegistry: "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+  imagePullPolicy: Always
+  # imagePullSecrets:
+  #   - name: ecr-registry-secret
+
+# Production configuration
+config:
+  logLevel: "info"
+  corsOrigins: "https://wealist.io,https://www.wealist.io"
+  internalApiKey: ""  # Set via --set or external secrets
+
+  s3:
+    endpoint: "https://s3.ap-northeast-2.amazonaws.com"
+    publicEndpoint: "https://s3.ap-northeast-2.amazonaws.com"
+    bucket: "wealist-prod-files"
+    region: "ap-northeast-2"
+
+# Production secrets - MUST be overridden!
+# Use External Secrets Operator or --set flags
+secrets:
+  postgres:
+    user: ""      # Set via external secrets
+    password: ""  # Set via external secrets
+
+  redis:
+    password: ""  # Set via external secrets
+
+  s3:
+    accessKey: ""  # Use IAM roles instead
+    secretKey: ""  # Use IAM roles instead
+
+  oauth2:
+    google:
+      clientId: ""      # Set via external secrets
+      clientSecret: ""  # Set via external secrets
+    github:
+      clientId: ""      # Set via external secrets
+      clientSecret: ""  # Set via external secrets
+
+  jwt:
+    secret: ""  # Set via external secrets
+
+# Infrastructure - use external services in production
+postgres:
+  enabled: false  # Use AWS RDS
+  externalHost: "wealist-prod.cluster-xxxxx.ap-northeast-2.rds.amazonaws.com"
+  service:
+    port: 5432
+
+redis:
+  enabled: false  # Use AWS ElastiCache
+  externalHost: "wealist-prod.xxxxx.ap-northeast-2.cache.amazonaws.com"
+  service:
+    port: 6379
+
+livekit:
+  enabled: true
+  replicas: 2
+  config:
+    rtc:
+      nodeIp: ""  # Set to EC2 instance IP or use external IP discovery
+      useExternalIp: true
+    turn:
+      enabled: true  # Enable TURN for production
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "500m"
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"
+
+# Production service configuration - scaled up
+authService:
+  enabled: true
+  replicas: 2
+  image:
+    tag: "v1.0.0"  # Use specific version tags
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "250m"
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"
+  config:
+    oauth2:
+      redirectUri: "https://wealist.io/oauth2/callback"
+
+userService:
+  enabled: true
+  replicas: 2
+  image:
+    tag: "v1.0.0"
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "200m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+boardService:
+  enabled: true
+  replicas: 2
+  image:
+    tag: "v1.0.0"
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "200m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+chatService:
+  enabled: true
+  replicas: 2
+  image:
+    tag: "v1.0.0"
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "200m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+notiService:
+  enabled: true
+  replicas: 2
+  image:
+    tag: "v1.0.0"
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "200m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+storageService:
+  enabled: true
+  replicas: 2
+  image:
+    tag: "v1.0.0"
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "200m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+videoService:
+  enabled: true
+  replicas: 2
+  image:
+    tag: "v1.0.0"
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "200m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+# Production Ingress with TLS
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-http-version: "1.1"
+    nginx.ingress.kubernetes.io/websocket-services: "board-service,chat-service,livekit"
+    nginx.ingress.kubernetes.io/proxy-buffering: "off"
+    nginx.ingress.kubernetes.io/upstream-hash-by: "$request_uri"
+    # SSL redirect
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    # Rate limiting
+    nginx.ingress.kubernetes.io/limit-rps: "100"
+  tls:
+    enabled: true
+    secretName: wealist-tls-secret

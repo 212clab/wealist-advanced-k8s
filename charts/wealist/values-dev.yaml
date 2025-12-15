@@ -1,0 +1,113 @@
+# =============================================================================
+# Wealist Helm Chart - Development Values
+# =============================================================================
+# Usage: helm install wealist ./charts/wealist -f charts/wealist/values-dev.yaml
+# Or:    helm upgrade wealist ./charts/wealist -f charts/wealist/values-dev.yaml
+
+global:
+  environment: dev
+  namespace: wealist-dev
+
+  domain:
+    api: "localhost"        # Local development domain
+    public: "localhost"     # Public domain for WebSocket URLs
+
+  # Local registry for Kind cluster
+  imageRegistry: "localhost:5001"
+  imagePullPolicy: IfNotPresent
+
+# Development configuration
+config:
+  logLevel: "debug"
+  corsOrigins: "*"
+  internalApiKey: "internal-dev-key-change-in-production"
+
+  s3:
+    endpoint: "http://minio:9000"
+    publicEndpoint: "http://localhost/minio"  # Accessible via Ingress
+    bucket: "wealist-files"
+    region: "ap-northeast-2"
+
+# Development secrets (DO NOT use in production!)
+secrets:
+  postgres:
+    user: "postgres"
+    password: "postgrespassword"
+
+  redis:
+    password: "redispassword"
+
+  s3:
+    accessKey: "minioadmin"
+    secretKey: "minioadmin"
+
+  oauth2:
+    google:
+      clientId: ""
+      clientSecret: ""
+    github:
+      clientId: ""
+      clientSecret: ""
+
+  jwt:
+    secret: "dev-jwt-secret-key-change-in-production"
+
+# Infrastructure - all enabled for local dev
+postgres:
+  enabled: true
+  persistence:
+    enabled: true
+    size: 5Gi
+
+redis:
+  enabled: true
+  persistence:
+    enabled: true
+    size: 1Gi
+
+livekit:
+  enabled: true
+  config:
+    rtc:
+      nodeIp: "127.0.0.1"  # Override for local development
+    turn:
+      enabled: false
+
+# All services enabled with minimal resources
+authService:
+  enabled: true
+  replicas: 1
+  config:
+    oauth2:
+      redirectUri: "http://localhost/oauth2/callback"
+
+userService:
+  enabled: true
+  replicas: 1
+
+boardService:
+  enabled: true
+  replicas: 1
+
+chatService:
+  enabled: true
+  replicas: 1
+
+notiService:
+  enabled: true
+  replicas: 1
+
+storageService:
+  enabled: true
+  replicas: 1
+
+videoService:
+  enabled: true
+  replicas: 1
+
+# Ingress enabled for local development
+ingress:
+  enabled: true
+  className: nginx
+  tls:
+    enabled: false

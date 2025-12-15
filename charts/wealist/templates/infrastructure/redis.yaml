@@ -1,0 +1,98 @@
+{{- if .Values.redis.enabled }}
+---
+# =============================================================================
+# Redis StatefulSet
+# =============================================================================
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: redis
+  namespace: {{ include "wealist.namespace" . }}
+  labels:
+    {{- include "wealist.serviceLabels" (dict "name" "redis" "context" .) | nindent 4 }}
+spec:
+  serviceName: redis
+  replicas: {{ .Values.redis.replicas }}
+  selector:
+    matchLabels:
+      {{- include "wealist.selectorLabels" (dict "name" "redis" "context" .) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "wealist.selectorLabels" (dict "name" "redis" "context" .) | nindent 8 }}
+    spec:
+      containers:
+        - name: redis
+          image: {{ .Values.redis.image.repository }}:{{ .Values.redis.image.tag }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - name: redis
+              containerPort: 6379
+              protocol: TCP
+          command:
+            - redis-server
+            - --requirepass
+            - $(REDIS_PASSWORD)
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-secret
+                  key: REDIS_PASSWORD
+          {{- if .Values.redis.persistence.enabled }}
+          volumeMounts:
+            - name: redis-data
+              mountPath: /data
+          {{- end }}
+          resources:
+            {{- toYaml .Values.redis.resources | nindent 12 }}
+  {{- if .Values.redis.persistence.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: redis-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        {{- if .Values.redis.persistence.storageClass }}
+        storageClassName: {{ .Values.redis.persistence.storageClass }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.redis.persistence.size }}
+  {{- end }}
+
+---
+# =============================================================================
+# Redis Service
+# =============================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis
+  namespace: {{ include "wealist.namespace" . }}
+  labels:
+    {{- include "wealist.serviceLabels" (dict "name" "redis" "context" .) | nindent 4 }}
+spec:
+  type: {{ .Values.redis.service.type }}
+  ports:
+    - name: redis
+      port: {{ .Values.redis.service.port }}
+      targetPort: 6379
+      protocol: TCP
+  selector:
+    {{- include "wealist.selectorLabels" (dict "name" "redis" "context" .) | nindent 4 }}
+
+---
+# =============================================================================
+# Redis Secret
+# =============================================================================
+apiVersion: v1
+kind: Secret
+metadata:
+  name: redis-secret
+  namespace: {{ include "wealist.namespace" . }}
+  labels:
+    {{- include "wealist.serviceLabels" (dict "name" "redis" "context" .) | nindent 4 }}
+type: Opaque
+stringData:
+  REDIS_PASSWORD: {{ .Values.secrets.redis.password | quote }}
+{{- end }}

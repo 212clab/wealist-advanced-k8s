@@ -1,0 +1,87 @@
+{{- if .Values.chatService.enabled }}
+---
+# =============================================================================
+# Chat Service Deployment
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.chatService.name }}
+  namespace: {{ include "wealist.namespace" . }}
+  labels:
+    {{- include "wealist.serviceLabels" (dict "name" .Values.chatService.name "context" .) | nindent 4 }}
+spec:
+  replicas: {{ .Values.chatService.replicas }}
+  selector:
+    matchLabels:
+      {{- include "wealist.selectorLabels" (dict "name" .Values.chatService.name "context" .) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "wealist.selectorLabels" (dict "name" .Values.chatService.name "context" .) | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ .Values.chatService.name }}
+          image: {{ include "wealist.image" (dict "repository" .Values.chatService.image.repository "tag" .Values.chatService.image.tag "context" .) }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.chatService.port }}
+              protocol: TCP
+          env:
+            {{- include "wealist.commonEnv" . | nindent 12 }}
+            {{- include "wealist.secretEnv" . | nindent 12 }}
+            - name: PORT
+              value: {{ .Values.chatService.port | quote }}
+            - name: DATABASE_URL
+              value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@{{ .Values.chatService.config.database.host }}:{{ .Values.chatService.config.database.port }}/{{ .Values.chatService.config.database.name }}?sslmode=disable"
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: wealist-secrets
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: wealist-secrets
+                  key: POSTGRES_PASSWORD
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.chatService.probes.liveness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.chatService.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.chatService.probes.liveness.periodSeconds }}
+            timeoutSeconds: 3
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.chatService.probes.readiness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.chatService.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.chatService.probes.readiness.periodSeconds }}
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.chatService.resources | nindent 12 }}
+
+---
+# =============================================================================
+# Chat Service Service
+# =============================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.chatService.name }}
+  namespace: {{ include "wealist.namespace" . }}
+  labels:
+    {{- include "wealist.serviceLabels" (dict "name" .Values.chatService.name "context" .) | nindent 4 }}
+spec:
+  type: {{ .Values.chatService.service.type }}
+  ports:
+    - name: http
+      port: {{ .Values.chatService.service.port }}
+      targetPort: http
+      protocol: TCP
+  selector:
+    {{- include "wealist.selectorLabels" (dict "name" .Values.chatService.name "context" .) | nindent 4 }}
+{{- end }}

@@ -1,0 +1,96 @@
+{{- if .Values.videoService.enabled }}
+---
+# =============================================================================
+# Video Service Deployment
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.videoService.name }}
+  namespace: {{ include "wealist.namespace" . }}
+  labels:
+    {{- include "wealist.serviceLabels" (dict "name" .Values.videoService.name "context" .) | nindent 4 }}
+    tier: backend
+spec:
+  replicas: {{ .Values.videoService.replicas }}
+  selector:
+    matchLabels:
+      {{- include "wealist.selectorLabels" (dict "name" .Values.videoService.name "context" .) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "wealist.selectorLabels" (dict "name" .Values.videoService.name "context" .) | nindent 8 }}
+        tier: backend
+    spec:
+      containers:
+        - name: {{ .Values.videoService.name }}
+          image: {{ include "wealist.image" (dict "repository" .Values.videoService.image.repository "tag" .Values.videoService.image.tag "context" .) }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.videoService.port }}
+              protocol: TCP
+          env:
+            {{- include "wealist.commonEnv" . | nindent 12 }}
+            {{- include "wealist.secretEnv" . | nindent 12 }}
+            - name: PORT
+              value: {{ .Values.videoService.port | quote }}
+            - name: DATABASE_URL
+              value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@{{ .Values.videoService.config.database.host }}:{{ .Values.videoService.config.database.port }}/{{ .Values.videoService.config.database.name }}?sslmode=disable"
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: wealist-secrets
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: wealist-secrets
+                  key: POSTGRES_PASSWORD
+            # LiveKit configuration
+            - name: LIVEKIT_HOST
+              value: {{ .Values.videoService.config.livekit.host | quote }}
+            - name: LIVEKIT_API_KEY
+              value: {{ .Values.videoService.config.livekit.apiKey | quote }}
+            - name: LIVEKIT_API_SECRET
+              value: {{ .Values.videoService.config.livekit.apiSecret | quote }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.videoService.probes.liveness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.videoService.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.videoService.probes.liveness.periodSeconds }}
+            timeoutSeconds: 3
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.videoService.probes.readiness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.videoService.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.videoService.probes.readiness.periodSeconds }}
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.videoService.resources | nindent 12 }}
+
+---
+# =============================================================================
+# Video Service Service
+# =============================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.videoService.name }}
+  namespace: {{ include "wealist.namespace" . }}
+  labels:
+    {{- include "wealist.serviceLabels" (dict "name" .Values.videoService.name "context" .) | nindent 4 }}
+spec:
+  type: {{ .Values.videoService.service.type }}
+  ports:
+    - name: http
+      port: {{ .Values.videoService.service.port }}
+      targetPort: http
+      protocol: TCP
+  selector:
+    {{- include "wealist.selectorLabels" (dict "name" .Values.videoService.name "context" .) | nindent 4 }}
+{{- end }}

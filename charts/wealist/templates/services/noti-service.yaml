@@ -1,0 +1,87 @@
+{{- if .Values.notiService.enabled }}
+---
+# =============================================================================
+# Notification Service Deployment
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.notiService.name }}
+  namespace: {{ include "wealist.namespace" . }}
+  labels:
+    {{- include "wealist.serviceLabels" (dict "name" .Values.notiService.name "context" .) | nindent 4 }}
+spec:
+  replicas: {{ .Values.notiService.replicas }}
+  selector:
+    matchLabels:
+      {{- include "wealist.selectorLabels" (dict "name" .Values.notiService.name "context" .) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "wealist.selectorLabels" (dict "name" .Values.notiService.name "context" .) | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ .Values.notiService.name }}
+          image: {{ include "wealist.image" (dict "repository" .Values.notiService.image.repository "tag" .Values.notiService.image.tag "context" .) }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.notiService.port }}
+              protocol: TCP
+          env:
+            {{- include "wealist.commonEnv" . | nindent 12 }}
+            {{- include "wealist.secretEnv" . | nindent 12 }}
+            - name: PORT
+              value: {{ .Values.notiService.port | quote }}
+            - name: DATABASE_URL
+              value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@{{ .Values.notiService.config.database.host }}:{{ .Values.notiService.config.database.port }}/{{ .Values.notiService.config.database.name }}?sslmode=disable"
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: wealist-secrets
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: wealist-secrets
+                  key: POSTGRES_PASSWORD
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.notiService.probes.liveness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.notiService.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.notiService.probes.liveness.periodSeconds }}
+            timeoutSeconds: 3
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.notiService.probes.readiness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.notiService.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.notiService.probes.readiness.periodSeconds }}
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.notiService.resources | nindent 12 }}
+
+---
+# =============================================================================
+# Notification Service Service
+# =============================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.notiService.name }}
+  namespace: {{ include "wealist.namespace" . }}
+  labels:
+    {{- include "wealist.serviceLabels" (dict "name" .Values.notiService.name "context" .) | nindent 4 }}
+spec:
+  type: {{ .Values.notiService.service.type }}
+  ports:
+    - name: http
+      port: {{ .Values.notiService.service.port }}
+      targetPort: http
+      protocol: TCP
+  selector:
+    {{- include "wealist.selectorLabels" (dict "name" .Values.notiService.name "context" .) | nindent 4 }}
+{{- end }}

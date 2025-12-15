@@ -1,0 +1,142 @@
+{{- if .Values.ingress.enabled }}
+---
+# =============================================================================
+# Wealist Ingress
+# =============================================================================
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: wealist-ingress
+  namespace: {{ include "wealist.namespace" . }}
+  labels:
+    {{- include "wealist.labels" . | nindent 4 }}
+  annotations:
+    {{- toYaml .Values.ingress.annotations | nindent 4 }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- if and .Values.ingress.tls.enabled .Values.ingress.tls.secretName }}
+  tls:
+    - hosts:
+        - {{ .Values.global.domain.api }}
+      secretName: {{ .Values.ingress.tls.secretName }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.global.domain.api }}
+      http:
+        paths:
+          # ============================================
+          # OAuth2 Routes (auth-service)
+          # ============================================
+          - path: /()(oauth2/.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: {{ .Values.authService.name }}
+                port:
+                  number: {{ .Values.authService.service.port }}
+
+          # ============================================
+          # Service Routes (prefix-based routing)
+          # Frontend requests /svc/{service}/api/...
+          # Ingress strips /svc/{service} and forwards to service
+          # ============================================
+
+          # Auth Service: /svc/auth/api/auth/* -> /api/auth/*
+          {{- if .Values.authService.enabled }}
+          - path: /svc/auth(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: {{ .Values.authService.name }}
+                port:
+                  number: {{ .Values.authService.service.port }}
+          {{- end }}
+
+          # User Service: /svc/user/api/* -> /api/*
+          {{- if .Values.userService.enabled }}
+          - path: /svc/user(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: {{ .Values.userService.name }}
+                port:
+                  number: {{ .Values.userService.service.port }}
+          {{- end }}
+
+          # Board Service: /svc/board/api/boards/* -> /api/boards/*
+          {{- if .Values.boardService.enabled }}
+          - path: /svc/board(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: {{ .Values.boardService.name }}
+                port:
+                  number: {{ .Values.boardService.service.port }}
+          {{- end }}
+
+          # Chat Service: /svc/chat/api/chats/* -> /api/chats/*
+          {{- if .Values.chatService.enabled }}
+          - path: /svc/chat(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: {{ .Values.chatService.name }}
+                port:
+                  number: {{ .Values.chatService.service.port }}
+          {{- end }}
+
+          # Notification Service: /svc/noti/api/notifications/* -> /api/notifications/*
+          {{- if .Values.notiService.enabled }}
+          - path: /svc/noti(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: {{ .Values.notiService.name }}
+                port:
+                  number: {{ .Values.notiService.service.port }}
+          {{- end }}
+
+          # Storage Service: /svc/storage/api/storage/* -> /api/storage/*
+          {{- if .Values.storageService.enabled }}
+          - path: /svc/storage(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: {{ .Values.storageService.name }}
+                port:
+                  number: {{ .Values.storageService.service.port }}
+          {{- end }}
+
+          # Video Service: /svc/video/api/video/* -> /api/video/*
+          {{- if .Values.videoService.enabled }}
+          - path: /svc/video(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: {{ .Values.videoService.name }}
+                port:
+                  number: {{ .Values.videoService.service.port }}
+          {{- end }}
+
+          # LiveKit Service: /svc/livekit/* -> /* (WebRTC/WebSocket)
+          {{- if .Values.livekit.enabled }}
+          - path: /svc/livekit(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: livekit
+                port:
+                  number: {{ .Values.livekit.service.port }}
+          {{- end }}
+
+          # ============================================
+          # MinIO Proxy (S3 Presigned URL access)
+          # ============================================
+          - path: /minio(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: minio
+                port:
+                  number: 9000
+{{- end }}

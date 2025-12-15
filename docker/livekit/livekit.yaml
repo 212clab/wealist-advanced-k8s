@@ -1,0 +1,29 @@
+# LiveKit Server Configuration
+# For local development (TCP only - UDP disabled for simplicity)
+
+port: 7880
+rtc:
+  # TCP only mode - UDP disabled for local dev/kind environment
+  tcp_port: 7881
+  port_range_start: 7881
+  port_range_end: 7881
+  use_external_ip: false
+  node_ip: 127.0.0.1
+
+# API Keys - for development only (secret must be 32+ chars)
+keys:
+  devkey: devsecretkey1234567890abcdefghijk
+
+# Logging
+logging:
+  level: info
+  json: false
+
+# Room settings
+room:
+  empty_timeout: 300
+  max_participants: 100
+
+# TURN server disabled for local dev (using TCP only via rtc.tcp_port)
+turn:
+  enabled: false

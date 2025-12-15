@@ -1,0 +1,27 @@
+apiVersion: v2
+name: wealist
+description: Wealist - Full-stack collaboration platform with microservices architecture
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+
+keywords:
+  - wealist
+  - collaboration
+  - microservices
+  - kubernetes
+
+maintainers:
+  - name: Wealist Team
+
+# Chart dependencies (optional - for external charts like bitnami/postgresql)
+# Uncomment and configure if you want to use external Helm charts
+# dependencies:
+#   - name: postgresql
+#     version: "12.x.x"
+#     repository: "https://charts.bitnami.com/bitnami"
+#     condition: postgresql.enabled
+#   - name: redis
+#     version: "17.x.x"
+#     repository: "https://charts.bitnami.com/bitnami"
+#     condition: redis.enabled

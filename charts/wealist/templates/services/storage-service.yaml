@@ -1,0 +1,87 @@
+{{- if .Values.storageService.enabled }}
+---
+# =============================================================================
+# Storage Service Deployment
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.storageService.name }}
+  namespace: {{ include "wealist.namespace" . }}
+  labels:
+    {{- include "wealist.serviceLabels" (dict "name" .Values.storageService.name "context" .) | nindent 4 }}
+spec:
+  replicas: {{ .Values.storageService.replicas }}
+  selector:
+    matchLabels:
+      {{- include "wealist.selectorLabels" (dict "name" .Values.storageService.name "context" .) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "wealist.selectorLabels" (dict "name" .Values.storageService.name "context" .) | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ .Values.storageService.name }}
+          image: {{ include "wealist.image" (dict "repository" .Values.storageService.image.repository "tag" .Values.storageService.image.tag "context" .) }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.storageService.port }}
+              protocol: TCP
+          env:
+            {{- include "wealist.commonEnv" . | nindent 12 }}
+            {{- include "wealist.secretEnv" . | nindent 12 }}
+            - name: PORT
+              value: {{ .Values.storageService.port | quote }}
+            - name: DATABASE_URL
+              value: "postgresql://$(POSTGRES_USER):$(POSTGRES_PASSWORD)@{{ .Values.storageService.config.database.host }}:{{ .Values.storageService.config.database.port }}/{{ .Values.storageService.config.database.name }}?sslmode=disable"
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: wealist-secrets
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: wealist-secrets
+                  key: POSTGRES_PASSWORD
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.storageService.probes.liveness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.storageService.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.storageService.probes.liveness.periodSeconds }}
+            timeoutSeconds: 3
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.storageService.probes.readiness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.storageService.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.storageService.probes.readiness.periodSeconds }}
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            {{- toYaml .Values.storageService.resources | nindent 12 }}
+
+---
+# =============================================================================
+# Storage Service Service
+# =============================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.storageService.name }}
+  namespace: {{ include "wealist.namespace" . }}
+  labels:
+    {{- include "wealist.serviceLabels" (dict "name" .Values.storageService.name "context" .) | nindent 4 }}
+spec:
+  type: {{ .Values.storageService.service.type }}
+  ports:
+    - name: http
+      port: {{ .Values.storageService.service.port }}
+      targetPort: http
+      protocol: TCP
+  selector:
+    {{- include "wealist.selectorLabels" (dict "name" .Values.storageService.name "context" .) | nindent 4 }}
+{{- end }}

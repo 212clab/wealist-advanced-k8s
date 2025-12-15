@@ -1,0 +1,124 @@
+{{- if .Values.authService.enabled }}
+---
+# =============================================================================
+# Auth Service Deployment
+# =============================================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.authService.name }}
+  namespace: {{ include "wealist.namespace" . }}
+  labels:
+    {{- include "wealist.serviceLabels" (dict "name" .Values.authService.name "context" .) | nindent 4 }}
+spec:
+  replicas: {{ .Values.authService.replicas }}
+  selector:
+    matchLabels:
+      {{- include "wealist.selectorLabels" (dict "name" .Values.authService.name "context" .) | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "wealist.selectorLabels" (dict "name" .Values.authService.name "context" .) | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ .Values.authService.name }}
+          image: {{ include "wealist.image" (dict "repository" .Values.authService.image.repository "tag" .Values.authService.image.tag "context" .) }}
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.authService.port }}
+              protocol: TCP
+          env:
+            {{- include "wealist.commonEnv" . | nindent 12 }}
+            {{- include "wealist.secretEnv" . | nindent 12 }}
+            # Service-specific environment variables
+            - name: AUTH_SERVICE_PORT
+              value: {{ .Values.authService.port | quote }}
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:postgresql://{{ .Values.authService.config.database.host }}:{{ .Values.authService.config.database.port }}/{{ .Values.authService.config.database.name }}"
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: wealist-secrets
+                  key: POSTGRES_USER
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: wealist-secrets
+                  key: POSTGRES_PASSWORD
+            - name: SPRING_REDIS_HOST
+              value: {{ .Values.redis.enabled | ternary "redis" (.Values.redis.externalHost | default "redis") | quote }}
+            - name: SPRING_REDIS_PORT
+              value: {{ .Values.redis.service.port | quote }}
+            - name: SPRING_REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-secret
+                  key: REDIS_PASSWORD
+            {{- if .Values.secrets.oauth2.google.clientId }}
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: wealist-secrets
+                  key: GOOGLE_CLIENT_ID
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GOOGLE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: wealist-secrets
+                  key: GOOGLE_CLIENT_SECRET
+            {{- end }}
+            {{- if .Values.secrets.oauth2.github.clientId }}
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GITHUB_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: wealist-secrets
+                  key: GITHUB_CLIENT_ID
+            - name: SPRING_SECURITY_OAUTH2_CLIENT_REGISTRATION_GITHUB_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: wealist-secrets
+                  key: GITHUB_CLIENT_SECRET
+            {{- end }}
+            - name: OAUTH2_REDIRECT_URI
+              value: {{ .Values.authService.config.oauth2.redirectUri | quote }}
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: wealist-secrets
+                  key: JWT_SECRET
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.authService.probes.liveness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.authService.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.authService.probes.liveness.periodSeconds }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.authService.probes.readiness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.authService.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.authService.probes.readiness.periodSeconds }}
+          resources:
+            {{- toYaml .Values.authService.resources | nindent 12 }}
+
+---
+# =============================================================================
+# Auth Service Service
+# =============================================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.authService.name }}
+  namespace: {{ include "wealist.namespace" . }}
+  labels:
+    {{- include "wealist.serviceLabels" (dict "name" .Values.authService.name "context" .) | nindent 4 }}
+spec:
+  type: {{ .Values.authService.service.type }}
+  ports:
+    - name: http
+      port: {{ .Values.authService.service.port }}
+      targetPort: http
+      protocol: TCP
+  selector:
+    {{- include "wealist.selectorLabels" (dict "name" .Values.authService.name "context" .) | nindent 4 }}
+{{- end }}
